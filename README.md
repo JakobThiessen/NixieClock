@@ -7,6 +7,19 @@
 
 # Hardware
 
+<p float="left">
+  <img src="/pict/mainboard_schematic.png" width="800" />
+</p>
+
+<p float="left">
+  <img src="/pict/mainboard_top.png" width="600" />
+</p>
+
+<p float="left">
+  <img src="/pict/mainboard_bot.png" width="600" />
+</p>
+
+
 ## Display 1.14"
 
 | Top side                |Bottom side               |
