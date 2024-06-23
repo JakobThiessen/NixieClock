@@ -1,0 +1,52 @@
+(kicad_sch
+	(version 20231120)
+	(generator "eeschema")
+	(generator_version "8.0")
+	(uuid "28753b5f-1145-4368-81b3-c5ec5f06c7e3")
+	(paper "A4")
+	(lib_symbols)
+	(wire
+		(pts
+			(xy 226.06 38.1) (xy 254 38.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5af704d7-8f7e-4226-9ab1-e37b5b970b87")
+	)
+	(wire
+		(pts
+			(xy 226.06 40.64) (xy 254 40.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ac8ecb93-ae0d-4dc8-a950-0e14a3c70944")
+	)
+	(hierarchical_label "SDA"
+		(shape input)
+		(at 254 40.64 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "29e42871-1b83-4760-b4ee-0c1ccd47f791")
+	)
+	(hierarchical_label "SCL"
+		(shape input)
+		(at 254 38.1 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "c2ff9239-567b-4ad5-853c-717377e203f0")
+	)
+)
