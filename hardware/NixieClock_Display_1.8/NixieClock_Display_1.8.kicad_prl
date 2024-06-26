@@ -1,6 +1,6 @@
 {
   "board": {
-    "active_layer": 44,
+    "active_layer": 0,
     "active_layer_preset": "All Layers",
     "auto_track_width": true,
     "hidden_netclasses": [],
@@ -74,7 +74,7 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "NixieClock_Display_1.14.kicad_prl",
+    "filename": "NixieClock_Display_1.8.kicad_prl",
     "version": 3
   },
   "project": {

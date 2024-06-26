@@ -816,395 +816,6 @@
 				)
 			)
 		)
-		(symbol "Interface_USB:FT230XQ"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U"
-				(at -13.97 15.24 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "FT230XQ"
-				(at 7.62 15.24 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" "Package_DFN_QFN:QFN-16-1EP_4x4mm_P0.65mm_EP2.1x2.1mm"
-				(at 34.29 -15.24 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT230X.pdf"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Full Speed USB to Basic UART, QFN-16"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "FTDI USB UART interface converter"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "QFN*1EP*4x4mm*P0.65mm*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "FT230XQ_0_1"
-				(rectangle
-					(start -13.97 13.97)
-					(end 13.97 -13.97)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-			)
-			(symbol "FT230XQ_1_1"
-				(pin power_in line
-					(at 2.54 17.78 270)
-					(length 3.81)
-					(name "VCCIO"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -2.54 17.78 270)
-					(length 3.81)
-					(name "VCC"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin bidirectional line
-					(at 17.78 -5.08 180)
-					(length 3.81)
-					(name "CBUS1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "11"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin bidirectional line
-					(at 17.78 -2.54 180)
-					(length 3.81)
-					(name "CBUS0"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "12"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 0 -17.78 90)
-					(length 3.81)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "13"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin bidirectional line
-					(at 17.78 -10.16 180)
-					(length 3.81)
-					(name "CBUS3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "14"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at 17.78 10.16 180)
-					(length 3.81)
-					(name "TXD"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "15"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at 17.78 5.08 180)
-					(length 3.81)
-					(name "~{RTS}"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "16"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 2.54 -17.78 90)
-					(length 3.81)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "17"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at 17.78 7.62 180)
-					(length 3.81)
-					(name "RXD"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -2.54 -17.78 90)
-					(length 3.81)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at 17.78 2.54 180)
-					(length 3.81)
-					(name "~{CTS}"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin bidirectional line
-					(at 17.78 -7.62 180)
-					(length 3.81)
-					(name "CBUS2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin bidirectional line
-					(at -17.78 0 0)
-					(length 3.81)
-					(name "USBDP"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin bidirectional line
-					(at -17.78 2.54 0)
-					(length 3.81)
-					(name "USBDM"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_out line
-					(at -17.78 10.16 0)
-					(length 3.81)
-					(name "3V3OUT"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -17.78 -5.08 0)
-					(length 3.81)
-					(name "~{RESET}"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "9"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-		)
 		(symbol "Regulator_Switching:R-78C3.3-1.0"
 			(pin_names
 				(offset 0.254)
@@ -1536,6 +1147,285 @@
 				)
 			)
 		)
+		(symbol "ownSymbols:FT234XD"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at -13.462 13.97 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "FT234XD"
+				(at 0 -1.016 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "Package_DFN_QFN:DFN-12-1EP_3x3mm_P0.45mm_EP1.65x2.38mm"
+				(at -0.762 -1.524 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://ftdichip.com/wp-content/uploads/2024/05/DS_FT234XD.pdf"
+				(at -1.016 -3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "USB Full Speed to Basic UART IC with USB Charger Detection, DFN-12"
+				(at -0.762 1.016 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "FT234XD_0_1"
+				(rectangle
+					(start -13.97 12.7)
+					(end 13.97 -15.24)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "FT234XD_1_1"
+				(pin bidirectional line
+					(at -17.78 1.27 0)
+					(length 3.81)
+					(name "USBDM"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 17.78 6.35 180)
+					(length 3.81)
+					(name "RXD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 17.78 1.27 180)
+					(length 3.81)
+					(name "~{CTS}"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -17.78 -1.27 0)
+					(length 3.81)
+					(name "USBDP"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -17.78 -6.35 0)
+					(length 3.81)
+					(name "~{RESET}"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at -17.78 8.89 0)
+					(length 3.81)
+					(name "3V3OUT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -2.54 16.51 270)
+					(length 3.81)
+					(name "VCC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -2.54 -19.05 90)
+					(length 3.81)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 17.78 -3.81 180)
+					(length 3.81)
+					(name "CBUS0"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 17.78 8.89 180)
+					(length 3.81)
+					(name "TXD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 17.78 3.81 180)
+					(length 3.81)
+					(name "~{RTS}"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 2.54 16.51 270)
+					(length 3.81)
+					(name "VCCIO"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
 		(symbol "power:+3.3V"
 			(power)
 			(pin_numbers hide)
@@ -1754,22 +1644,10 @@
 		)
 	)
 	(junction
-		(at 147.32 92.71)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "0f0e66a3-8202-4496-a1b2-60ffde422908")
-	)
-	(junction
 		(at 203.2 101.6)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "1fb98c0e-a0c1-4ecf-a46b-e86fd2009ffb")
-	)
-	(junction
-		(at 144.78 92.71)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "34d5df54-ff0e-419b-a0ba-3f5a54f85ce1")
 	)
 	(junction
 		(at 69.85 69.85)
@@ -1913,16 +1791,6 @@
 	)
 	(wire
 		(pts
-			(xy 147.32 90.17) (xy 147.32 92.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5224f875-e6ac-4f40-bb04-6518152578a4")
-	)
-	(wire
-		(pts
 			(xy 224.79 116.84) (xy 224.79 119.38)
 		)
 		(stroke
@@ -1960,16 +1828,6 @@
 			(type default)
 		)
 		(uuid "7ddc57cf-0f16-4939-bc1d-e311f6112e8f")
-	)
-	(wire
-		(pts
-			(xy 147.32 92.71) (xy 144.78 92.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "85a37db6-fafc-420e-a71d-b37fb25fc7df")
 	)
 	(wire
 		(pts
@@ -2033,7 +1891,7 @@
 	)
 	(wire
 		(pts
-			(xy 144.78 90.17) (xy 144.78 92.71)
+			(xy 144.78 90.17) (xy 144.78 96.52)
 		)
 		(stroke
 			(width 0)
@@ -2213,26 +2071,6 @@
 	)
 	(wire
 		(pts
-			(xy 149.86 92.71) (xy 147.32 92.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ea07da71-1abf-43fc-a418-3f944e0132e4")
-	)
-	(wire
-		(pts
-			(xy 149.86 90.17) (xy 149.86 92.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f3141ba4-6e58-4896-94c4-c3590c2a47e2")
-	)
-	(wire
-		(pts
 			(xy 224.79 99.06) (xy 224.79 96.52)
 		)
 		(stroke
@@ -2240,16 +2078,6 @@
 			(type default)
 		)
 		(uuid "f4447637-4f4b-4e8a-be54-d2aa5caaa0ca")
-	)
-	(wire
-		(pts
-			(xy 144.78 92.71) (xy 144.78 96.52)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f80f93fd-e608-44be-b76c-6daab2b4cd23")
 	)
 	(wire
 		(pts
@@ -2363,6 +2191,106 @@
 			(justify left)
 		)
 		(uuid "e73bb5da-fdb9-442d-8583-b6b6039d47c9")
+	)
+	(symbol
+		(lib_id "ownSymbols:FT234XD")
+		(at 147.32 71.12 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "02701f59-8477-477d-ac1a-9354afa4fdf9")
+		(property "Reference" "U3"
+			(at 146.9741 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "FT234XD"
+			(at 146.9741 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_DFN_QFN:DFN-12-1EP_3x3mm_P0.45mm_EP1.65x2.38mm"
+			(at 146.558 72.644 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://ftdichip.com/wp-content/uploads/2024/05/DS_FT234XD.pdf"
+			(at 146.304 74.676 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "USB Full Speed to Basic UART IC with USB Charger Detection, DFN-12"
+			(at 146.558 70.104 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "11"
+			(uuid "3f2a2c3d-ad96-4d8e-971f-dab4f2fd1086")
+		)
+		(pin "12"
+			(uuid "6b882378-b603-41bb-88fd-a8b87cf4e689")
+		)
+		(pin "5"
+			(uuid "0e0643f5-ced2-48c7-b42e-d59800d2c76d")
+		)
+		(pin "6"
+			(uuid "00f941e9-74d9-444c-82b3-18a44a99b479")
+		)
+		(pin "7"
+			(uuid "5786fe82-0de5-45e8-ac28-b19a56fa4c4d")
+		)
+		(pin "8"
+			(uuid "7c06cdcf-4454-4dfe-bb87-f091bf4d27f1")
+		)
+		(pin "9"
+			(uuid "789e63c2-a272-439f-b45a-4fdc99a81b1f")
+		)
+		(pin "10"
+			(uuid "db42e806-5e7f-4bec-a1ad-b2236795714a")
+		)
+		(pin "3"
+			(uuid "47fa9db6-8bf5-4ac4-99ca-6314e9126031")
+		)
+		(pin "1"
+			(uuid "dcdccb84-12f9-4e42-9c47-ec6a8026db9c")
+		)
+		(pin "2"
+			(uuid "08c50d96-a4bb-4803-9b5f-9a4026c4f29a")
+		)
+		(pin "4"
+			(uuid "be1aae6f-9810-4886-99dd-f5c38c6ba14f")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/951b3c7b-3f91-4669-9ecb-90f69d4a4e63"
+					(reference "U3")
+					(unit 1)
+				)
+			)
+		)
 	)
 	(symbol
 		(lib_id "power:GND")
@@ -2557,121 +2485,6 @@
 			(project "NixieClock_MainBoard"
 				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/951b3c7b-3f91-4669-9ecb-90f69d4a4e63"
 					(reference "#PWR09")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Interface_USB:FT230XQ")
-		(at 147.32 72.39 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "31abeee5-7554-440d-aa49-3d1e3959d04d")
-		(property "Reference" "U3"
-			(at 152.0541 53.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "FT230XQ"
-			(at 152.0541 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Package_DFN_QFN:QFN-16-1EP_4x4mm_P0.65mm_EP2.1x2.1mm"
-			(at 181.61 87.63 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT230X.pdf"
-			(at 147.32 72.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Full Speed USB to Basic UART, QFN-16"
-			(at 147.32 72.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "17"
-			(uuid "873a60cf-1f46-49fb-9e61-dab2dfd841e9")
-		)
-		(pin "10"
-			(uuid "62d90860-c5bd-44fa-a20c-8e764b669e61")
-		)
-		(pin "15"
-			(uuid "cd08ab1f-8b2a-490a-94aa-5a55e3b50dad")
-		)
-		(pin "14"
-			(uuid "16fcf9f3-cdaf-4435-b52e-1d4c781a0802")
-		)
-		(pin "11"
-			(uuid "5e64cc6f-7fc9-434b-a647-1e6ecd09a020")
-		)
-		(pin "12"
-			(uuid "493dfe1d-32e7-4874-9db9-bd2274f18b47")
-		)
-		(pin "13"
-			(uuid "46fa6bd6-def3-4e79-b516-ab20fd8380ab")
-		)
-		(pin "1"
-			(uuid "9e308e51-2ce3-4db8-a81d-cfab260e0353")
-		)
-		(pin "4"
-			(uuid "86c90bd0-582c-486a-8b4b-60f7c0a31c44")
-		)
-		(pin "6"
-			(uuid "b1d7e7aa-3e36-428b-aa86-cf1fd89a9e80")
-		)
-		(pin "7"
-			(uuid "4239dfba-950f-4fda-9299-5a54b6e5ae25")
-		)
-		(pin "5"
-			(uuid "30ba6cc9-2580-4281-827a-0dbeb0478e56")
-		)
-		(pin "2"
-			(uuid "4b91a6cc-351c-428e-97c9-158cdd425275")
-		)
-		(pin "8"
-			(uuid "565b67ba-3dc5-4138-894b-182adb6d6795")
-		)
-		(pin "16"
-			(uuid "daa642a9-5105-42f5-822e-c6ea8f271c1a")
-		)
-		(pin "3"
-			(uuid "6ffd8390-7362-4338-afe7-4f47d92469f3")
-		)
-		(pin "9"
-			(uuid "f0696287-2123-48a3-9f68-4c5d40c868cc")
-		)
-		(instances
-			(project "NixieClock_MainBoard"
-				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/951b3c7b-3f91-4669-9ecb-90f69d4a4e63"
-					(reference "U3")
 					(unit 1)
 				)
 			)
@@ -3535,7 +3348,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_USB:USB_C_Receptacle_G-Switch_GT-USB-7010ASV"
+		(property "Footprint" "Connector_USB:USB_C_Receptacle_GCT_USB4110"
 			(at 54.61 69.85 0)
 			(effects
 				(font
