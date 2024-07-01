@@ -592,6 +592,14 @@
     [
       "5527ff92-8430-4a10-8187-a8d8404aac00",
       "memory"
+    ],
+    [
+      "e88b4d72-ff15-48fe-a7d1-792eac0d4a53",
+      "uC"
+    ],
+    [
+      "e1d3402d-a317-4c73-b48d-1dbf4ee272dd",
+      "pwm"
     ]
   ],
   "text_variables": {}

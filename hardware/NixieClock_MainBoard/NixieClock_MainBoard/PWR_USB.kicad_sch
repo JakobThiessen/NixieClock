@@ -2091,7 +2091,7 @@
 	)
 	(text "Wichtig pinout\nprüfen"
 		(exclude_from_sim no)
-		(at 92.964 36.068 0)
+		(at 106.426 29.464 0)
 		(effects
 			(font
 				(size 3 3)
