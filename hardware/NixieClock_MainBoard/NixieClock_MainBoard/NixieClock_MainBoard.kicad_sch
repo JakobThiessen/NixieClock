@@ -1207,6 +1207,16 @@
 	)
 	(wire
 		(pts
+			(xy 124.46 127) (xy 139.7 127)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "26ca2a3c-d785-4679-af3e-d4acb3799502")
+	)
+	(wire
+		(pts
 			(xy 124.46 93.98) (xy 139.7 93.98)
 		)
 		(stroke
@@ -2529,7 +2539,7 @@
 		)
 		(uuid "704862cd-4659-460c-a55b-fdd01a327350")
 	)
-	(label "SCLk"
+	(label "SCLK"
 		(at 222.25 40.64 0)
 		(fields_autoplaced yes)
 		(effects
@@ -2649,6 +2659,17 @@
 			(justify left bottom)
 		)
 		(uuid "99ee6aa2-21bf-4a4e-b9c3-aa60a8783007")
+	)
+	(label "WS28XX"
+		(at 129.54 127 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9bdc1341-6b73-4946-9e6d-8fbb7915aaf6")
 	)
 	(label "VDD"
 		(at 222.25 111.76 0)
@@ -2848,7 +2869,7 @@
 		)
 		(uuid "bd3d8a55-74e4-4e51-90a7-7b3528b579b6")
 	)
-	(label "SCLk"
+	(label "SCLK"
 		(at 222.25 87.63 0)
 		(fields_autoplaced yes)
 		(effects
@@ -5099,6 +5120,16 @@
 				(justify right)
 			)
 			(uuid "f961df97-8c67-4130-88c9-d39bebd4fce7")
+		)
+		(pin "WS28XX" output
+			(at 139.7 127 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "8e833da9-a608-4b25-9654-c151a40f40e7")
 		)
 		(instances
 			(project "NixieClock_MainBoard"

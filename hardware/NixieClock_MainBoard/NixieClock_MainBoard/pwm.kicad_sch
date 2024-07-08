@@ -2549,7 +2549,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "1657685c-848f-4168-b336-1526b9069928")
+			(uuid "1657685c-848f-4168-b336-1526b9069929")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -2758,7 +2758,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "1ed4550a-a60e-4397-8cf7-b06e663dcb62")
+			(uuid "1ed4550a-a60e-4397-8cf7-b06e663dcb63")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -2823,19 +2823,19 @@
 			)
 		)
 		(pin "1"
-			(uuid "da874be8-a0cf-4d6a-b821-dda340bbc59a")
+			(uuid "da874be8-a0cf-4d6a-b821-dda340bbc59b")
 		)
 		(pin "2"
-			(uuid "3f3ec123-39c0-4f02-b823-6790c598cf60")
+			(uuid "3f3ec123-39c0-4f02-b823-6790c598cf61")
 		)
 		(pin "4"
-			(uuid "019d7c80-82a2-493d-be27-9b93d6f63f5a")
+			(uuid "019d7c80-82a2-493d-be27-9b93d6f63f5b")
 		)
 		(pin "5"
-			(uuid "5ad2622d-43f1-4c88-b8d1-a2e241546bf5")
+			(uuid "5ad2622d-43f1-4c88-b8d1-a2e241546bf6")
 		)
 		(pin "3"
-			(uuid "0a2398bd-f5bd-4363-82f2-bd685a3cb6f9")
+			(uuid "0a2398bd-f5bd-4363-82f2-bd685a3cb6fa")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -3048,19 +3048,19 @@
 			)
 		)
 		(pin "1"
-			(uuid "da874be8-a0cf-4d6a-b821-dda340bbc59a")
+			(uuid "da874be8-a0cf-4d6a-b821-dda340bbc59c")
 		)
 		(pin "2"
-			(uuid "3f3ec123-39c0-4f02-b823-6790c598cf60")
+			(uuid "3f3ec123-39c0-4f02-b823-6790c598cf62")
 		)
 		(pin "4"
-			(uuid "019d7c80-82a2-493d-be27-9b93d6f63f5a")
+			(uuid "019d7c80-82a2-493d-be27-9b93d6f63f5c")
 		)
 		(pin "5"
-			(uuid "5ad2622d-43f1-4c88-b8d1-a2e241546bf5")
+			(uuid "5ad2622d-43f1-4c88-b8d1-a2e241546bf7")
 		)
 		(pin "3"
-			(uuid "0a2398bd-f5bd-4363-82f2-bd685a3cb6f9")
+			(uuid "0a2398bd-f5bd-4363-82f2-bd685a3cb6fb")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -3191,19 +3191,19 @@
 			)
 		)
 		(pin "1"
-			(uuid "da874be8-a0cf-4d6a-b821-dda340bbc59a")
+			(uuid "da874be8-a0cf-4d6a-b821-dda340bbc59d")
 		)
 		(pin "2"
-			(uuid "3f3ec123-39c0-4f02-b823-6790c598cf60")
+			(uuid "3f3ec123-39c0-4f02-b823-6790c598cf63")
 		)
 		(pin "4"
-			(uuid "019d7c80-82a2-493d-be27-9b93d6f63f5a")
+			(uuid "019d7c80-82a2-493d-be27-9b93d6f63f5d")
 		)
 		(pin "5"
-			(uuid "5ad2622d-43f1-4c88-b8d1-a2e241546bf5")
+			(uuid "5ad2622d-43f1-4c88-b8d1-a2e241546bf8")
 		)
 		(pin "3"
-			(uuid "0a2398bd-f5bd-4363-82f2-bd685a3cb6f9")
+			(uuid "0a2398bd-f5bd-4363-82f2-bd685a3cb6fc")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -3334,19 +3334,19 @@
 			)
 		)
 		(pin "1"
-			(uuid "da874be8-a0cf-4d6a-b821-dda340bbc59a")
+			(uuid "da874be8-a0cf-4d6a-b821-dda340bbc59e")
 		)
 		(pin "2"
-			(uuid "3f3ec123-39c0-4f02-b823-6790c598cf60")
+			(uuid "3f3ec123-39c0-4f02-b823-6790c598cf64")
 		)
 		(pin "4"
-			(uuid "019d7c80-82a2-493d-be27-9b93d6f63f5a")
+			(uuid "019d7c80-82a2-493d-be27-9b93d6f63f5e")
 		)
 		(pin "5"
-			(uuid "5ad2622d-43f1-4c88-b8d1-a2e241546bf5")
+			(uuid "5ad2622d-43f1-4c88-b8d1-a2e241546bf9")
 		)
 		(pin "3"
-			(uuid "0a2398bd-f5bd-4363-82f2-bd685a3cb6f9")
+			(uuid "0a2398bd-f5bd-4363-82f2-bd685a3cb6fd")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
