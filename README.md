@@ -6,6 +6,10 @@
 # Hardware
 
 <p float="left">
+  <img src="/pict/3d_asb_nixieClock.png" width="800" />
+</p>
+
+<p float="left">
   <img src="/pict/mainboard_schematic.png" width="800" />
 </p>
 
