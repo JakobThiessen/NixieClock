@@ -321,43 +321,13 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 83.82) (xy 82.55 83.82)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "078e7f47-4b4e-4ba0-823f-8726589a340b")
-	)
-	(wire
-		(pts
 			(xy 118.11 76.2) (xy 82.55 76.2)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "460b481a-6341-4941-8435-77ca909673a1")
-	)
-	(wire
-		(pts
-			(xy 118.11 78.74) (xy 82.55 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5a8acaf0-ade6-45f5-855a-81b3b3dc7079")
-	)
-	(wire
-		(pts
-			(xy 118.11 81.28) (xy 82.55 81.28)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6c7f8371-96dc-4168-9a12-d34362fc561a")
+		(uuid "0bad70d9-bfec-4869-a46b-9c589c546d4b")
 	)
 	(wire
 		(pts
@@ -367,27 +337,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "731a9d65-06e9-4138-bd0b-6a65c2d3f84a")
-	)
-	(wire
-		(pts
-			(xy 118.11 66.04) (xy 82.55 66.04)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8019530f-7ee5-417b-bab2-dad1403d9e3e")
-	)
-	(wire
-		(pts
-			(xy 118.11 73.66) (xy 82.55 73.66)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ee61104d-186d-4f25-8af5-2ead5319cbcb")
+		(uuid "107b59ca-3ed6-427c-8138-e845aaa0af08")
 	)
 	(wire
 		(pts
@@ -397,7 +347,57 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "ef517add-41eb-4cc2-a77f-494cf7fd8829")
+		(uuid "1597be6e-f1a3-400d-89bc-8a12ce12004f")
+	)
+	(wire
+		(pts
+			(xy 118.11 81.28) (xy 82.55 81.28)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "354330e7-c302-4b98-b1a2-6c13174a42fd")
+	)
+	(wire
+		(pts
+			(xy 118.11 73.66) (xy 82.55 73.66)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "85fbd114-13b2-4b13-b911-d3237435f66c")
+	)
+	(wire
+		(pts
+			(xy 118.11 78.74) (xy 82.55 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "97037804-1675-477b-818b-90eebdcc4d96")
+	)
+	(wire
+		(pts
+			(xy 118.11 66.04) (xy 82.55 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c4abaa2a-1f77-4bda-9218-a2191b923a8c")
+	)
+	(wire
+		(pts
+			(xy 118.11 83.82) (xy 82.55 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "efc4a7fe-6e3f-4600-9bf8-1fb488698708")
 	)
 	(label "LEDA"
 		(at 95.25 66.04 0)
@@ -576,16 +576,16 @@
 	)
 	(symbol
 		(lib_id "Connector_Generic:Conn_01x08")
-		(at 123.19 73.66 0)
+		(at 123.19 76.2 0)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "873ae3e1-6487-4ea3-bf1c-5db1edc711e6")
 		(property "Reference" "J1"
-			(at 125.73 73.6599 0)
+			(at 125.73 76.2001 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -594,7 +594,7 @@
 			)
 		)
 		(property "Value" "Conn_01x08"
-			(at 125.73 76.1999 0)
+			(at 125.73 73.6601 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -603,7 +603,7 @@
 			)
 		)
 		(property "Footprint" "Connector_FFC-FPC:Hirose_FH12-8S-0.5SH_1x08-1MP_P0.50mm_Horizontal"
-			(at 123.19 73.66 0)
+			(at 123.19 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -612,7 +612,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 123.19 73.66 0)
+			(at 123.19 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -621,7 +621,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 123.19 73.66 0)
+			(at 123.19 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -630,28 +630,28 @@
 			)
 		)
 		(pin "3"
-			(uuid "619acd20-07f0-4225-a6d1-e2091704bfce")
+			(uuid "619acd20-07f0-4225-a6d1-e2091704bfcf")
 		)
 		(pin "8"
-			(uuid "82a92289-01c2-4138-9203-7a3428d98991")
+			(uuid "82a92289-01c2-4138-9203-7a3428d98992")
 		)
 		(pin "7"
-			(uuid "c83cf419-21ff-49db-80f2-dfb57f87aff3")
+			(uuid "c83cf419-21ff-49db-80f2-dfb57f87aff4")
 		)
 		(pin "4"
-			(uuid "ed09bd69-768b-4891-afa1-24718a0be641")
+			(uuid "ed09bd69-768b-4891-afa1-24718a0be642")
 		)
 		(pin "5"
-			(uuid "bba7111e-6b56-46ea-b536-02b0f55f4a66")
+			(uuid "bba7111e-6b56-46ea-b536-02b0f55f4a67")
 		)
 		(pin "1"
-			(uuid "c4575a88-6a69-4e74-a229-98901819e032")
+			(uuid "c4575a88-6a69-4e74-a229-98901819e033")
 		)
 		(pin "2"
-			(uuid "78ad2d27-437d-470f-b926-f1afca34b652")
+			(uuid "78ad2d27-437d-470f-b926-f1afca34b653")
 		)
 		(pin "6"
-			(uuid "93c79209-16bc-4273-8c4a-0133a052bf87")
+			(uuid "93c79209-16bc-4273-8c4a-0133a052bf88")
 		)
 		(instances
 			(project "NixieClock_Display_1.14"

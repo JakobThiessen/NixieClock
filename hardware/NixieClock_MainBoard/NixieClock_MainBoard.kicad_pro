@@ -484,7 +484,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "gerber/",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "NixieClock_MainBoard.step",
@@ -594,8 +594,32 @@
   },
   "sheets": [
     [
-      "73dc872d-ea67-43f7-a858-60eddcc0cda2",
-      ""
+      "5ddb5910-d1ea-4e23-971a-19156fc3bbe9",
+      "Root"
+    ],
+    [
+      "951b3c7b-3f91-4669-9ecb-90f69d4a4e63",
+      "POWER_USB"
+    ],
+    [
+      "079c23e2-2395-4de4-8770-a54833c4570a",
+      "IO"
+    ],
+    [
+      "63adde6a-e701-47ba-bd04-d46c7389fc6f",
+      "SENSOR"
+    ],
+    [
+      "5527ff92-8430-4a10-8187-a8d8404aac00",
+      "memory"
+    ],
+    [
+      "e88b4d72-ff15-48fe-a7d1-792eac0d4a53",
+      "uC"
+    ],
+    [
+      "e1d3402d-a317-4c73-b48d-1dbf4ee272dd",
+      "pwm"
     ]
   ],
   "text_variables": {}
