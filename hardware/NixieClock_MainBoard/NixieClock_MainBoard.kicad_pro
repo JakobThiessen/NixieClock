@@ -620,6 +620,10 @@
     [
       "e1d3402d-a317-4c73-b48d-1dbf4ee272dd",
       "pwm"
+    ],
+    [
+      "8b984608-bc62-47bf-85e9-3f8f4a56156e",
+      "SPI_DISPLAY_MOSI"
     ]
   ],
   "text_variables": {}

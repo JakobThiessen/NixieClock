@@ -5,6 +5,177 @@
 	(uuid "13e2e122-683e-4efb-bca5-88528eb96885")
 	(paper "A4")
 	(lib_symbols
+		(symbol "74xGxx:NC7SZ125M5X"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at -5.08 6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "NC7SZ125M5X"
+				(at 7.62 6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-23-5"
+				(at 16.51 -6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.onsemi.com/pdf/datasheet/nc7sz125-d.pdf"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "TinyLogic UHS Buffer, Tri-State Output, SOT-23-5"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "buffer three-state"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "SOT?23*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "NC7SZ125M5X_0_1"
+				(rectangle
+					(start -5.08 5.08)
+					(end 5.08 -5.08)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "NC7SZ125M5X_1_1"
+				(pin input line
+					(at -10.16 -2.54 0)
+					(length 5.08)
+					(name "~{OE}"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -10.16 2.54 0)
+					(length 5.08)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 -10.16 90)
+					(length 5.08)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 10.16 2.54 180)
+					(length 5.08)
+					(name "Y"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 10.16 270)
+					(length 5.08)
+					(name "VCC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
 		(symbol "Connector:Micro_SD_Card"
 			(pin_names
 				(offset 1.016)
@@ -707,15 +878,27 @@
 			)
 		)
 	)
+	(junction
+		(at 146.05 50.8)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "34adeef7-cc46-414e-9f8c-fcebd76650ac")
+	)
+	(junction
+		(at 114.3 71.12)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b7bc268f-2ed2-4d7b-bcbf-a813799035bc")
+	)
 	(wire
 		(pts
-			(xy 93.98 73.66) (xy 106.68 73.66)
+			(xy 93.98 71.12) (xy 114.3 71.12)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "0e6e8410-af51-43bc-853b-cdfeeebdf287")
+		(uuid "00bad8d4-a3da-4b6b-8f7c-9c2bfa6cdea0")
 	)
 	(wire
 		(pts
@@ -739,7 +922,17 @@
 	)
 	(wire
 		(pts
-			(xy 128.27 107.95) (xy 128.27 113.03)
+			(xy 146.05 50.8) (xy 146.05 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "32c198ca-bb6a-4d1a-a5a7-e20127d36a96")
+	)
+	(wire
+		(pts
+			(xy 114.3 129.54) (xy 114.3 134.62)
 		)
 		(stroke
 			(width 0)
@@ -749,7 +942,27 @@
 	)
 	(wire
 		(pts
-			(xy 115.57 120.65) (xy 115.57 124.46)
+			(xy 93.98 73.66) (xy 123.19 73.66)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "36ea24b1-7c17-4bf7-bbfe-27bf964df44d")
+	)
+	(wire
+		(pts
+			(xy 123.19 114.3) (xy 114.3 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3a0b0979-edcd-4acd-9b56-4ff6fff1a9db")
+	)
+	(wire
+		(pts
+			(xy 101.6 142.24) (xy 101.6 146.05)
 		)
 		(stroke
 			(width 0)
@@ -759,7 +972,17 @@
 	)
 	(wire
 		(pts
-			(xy 93.98 71.12) (xy 106.68 71.12)
+			(xy 143.51 73.66) (xy 152.4 73.66)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "51c9d483-edb9-492e-8d23-27c482b70dee")
+	)
+	(wire
+		(pts
+			(xy 114.3 50.8) (xy 146.05 50.8)
 		)
 		(stroke
 			(width 0)
@@ -779,7 +1002,37 @@
 	)
 	(wire
 		(pts
-			(xy 115.57 107.95) (xy 115.57 113.03)
+			(xy 106.68 109.22) (xy 106.68 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6a47238a-8d34-471d-a53c-9db2820454e1")
+	)
+	(wire
+		(pts
+			(xy 114.3 50.8) (xy 114.3 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "87705577-bbc0-4b7b-b1f0-c43a299e33c3")
+	)
+	(wire
+		(pts
+			(xy 152.4 109.22) (xy 143.51 109.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "92c32a39-63c7-4f5f-a5b4-14c2503252ea")
+	)
+	(wire
+		(pts
+			(xy 101.6 129.54) (xy 101.6 134.62)
 		)
 		(stroke
 			(width 0)
@@ -799,6 +1052,46 @@
 	)
 	(wire
 		(pts
+			(xy 146.05 50.8) (xy 152.4 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a74ca8d6-ffd6-4ba7-bb0d-ba84ad416100")
+	)
+	(wire
+		(pts
+			(xy 114.3 114.3) (xy 114.3 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ab0792eb-8d36-4d09-97ab-3a820cf0a4c0")
+	)
+	(wire
+		(pts
+			(xy 123.19 109.22) (xy 106.68 109.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b053985c-e75e-4af3-af1b-b9704851dde7")
+	)
+	(wire
+		(pts
+			(xy 143.51 78.74) (xy 146.05 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bd6c18f2-075c-4730-9641-cef3e2708c9f")
+	)
+	(wire
+		(pts
 			(xy 93.98 83.82) (xy 106.68 83.82)
 		)
 		(stroke
@@ -809,7 +1102,7 @@
 	)
 	(wire
 		(pts
-			(xy 128.27 120.65) (xy 128.27 124.46)
+			(xy 114.3 142.24) (xy 114.3 146.05)
 		)
 		(stroke
 			(width 0)
@@ -837,9 +1130,19 @@
 		)
 		(uuid "ef23854b-d7d7-46de-a1e8-935f94f354e3")
 	)
+	(wire
+		(pts
+			(xy 152.4 91.44) (xy 152.4 92.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f95d82b1-6331-4702-b2b1-2be47e0798dc")
+	)
 	(hierarchical_label "CS_MEM_1"
 		(shape input)
-		(at 106.68 71.12 0)
+		(at 152.4 50.8 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -863,7 +1166,7 @@
 	)
 	(hierarchical_label "MISO"
 		(shape input)
-		(at 106.68 83.82 0)
+		(at 152.4 109.22 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -875,7 +1178,7 @@
 	)
 	(hierarchical_label "MOSI"
 		(shape input)
-		(at 106.68 73.66 0)
+		(at 152.4 73.66 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -952,8 +1255,161 @@
 		)
 	)
 	(symbol
+		(lib_id "74xGxx:NC7SZ125M5X")
+		(at 133.35 76.2 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "063452eb-e8dd-40cf-b6b0-00f79c57ee7f")
+		(property "Reference" "U20"
+			(at 130.81 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "NC7SZ125M5X"
+			(at 125.222 69.342 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-5"
+			(at 116.84 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.onsemi.com/pdf/datasheet/nc7sz125-d.pdf"
+			(at 133.35 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "TinyLogic UHS Buffer, Tri-State Output, SOT-23-5"
+			(at 133.35 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "16117b9e-1296-4fc8-b046-6bd79f876591")
+		)
+		(pin "2"
+			(uuid "10ca94db-bcff-4b01-9d5c-5e04ab7b0362")
+		)
+		(pin "4"
+			(uuid "cf277cff-e4c8-485f-a425-221909f223ab")
+		)
+		(pin "5"
+			(uuid "0e635139-35e6-4a2f-82da-49c39ddeb8b3")
+		)
+		(pin "3"
+			(uuid "77967ce6-d682-40a7-a02e-c732af258c1b")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
+					(reference "U20")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "74xGxx:NC7SZ125M5X")
+		(at 133.35 111.76 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "313f0a45-5276-4b73-97b5-409082ba5b8e")
+		(property "Reference" "U21"
+			(at 135.89 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "NC7SZ125M5X"
+			(at 141.478 104.902 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-5"
+			(at 149.86 118.11 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.onsemi.com/pdf/datasheet/nc7sz125-d.pdf"
+			(at 133.35 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "TinyLogic UHS Buffer, Tri-State Output, SOT-23-5"
+			(at 133.35 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "8b251362-026b-4f71-9d78-6a72cb80166f")
+		)
+		(pin "2"
+			(uuid "55bed334-cb00-4c70-985b-b4fab14c71a1")
+		)
+		(pin "4"
+			(uuid "e9f5301c-3abb-49b7-8576-e75861db0ee6")
+		)
+		(pin "5"
+			(uuid "139ac01b-1d8f-4240-b3f7-afb362ad537d")
+		)
+		(pin "3"
+			(uuid "ee10dea0-44ef-4081-8f1e-26a49b516222")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
+					(reference "U21")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C")
-		(at 128.27 116.84 0)
+		(at 114.3 138.43 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -962,7 +1418,7 @@
 		(fields_autoplaced yes)
 		(uuid "4308ae79-a0a7-4814-b4b3-7ca84b604ceb")
 		(property "Reference" "C6"
-			(at 132.08 115.5699 0)
+			(at 118.11 137.1599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -971,7 +1427,7 @@
 			)
 		)
 		(property "Value" "1u0"
-			(at 132.08 118.1099 0)
+			(at 118.11 139.6999 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -980,7 +1436,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 129.2352 120.65 0)
+			(at 115.2652 142.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -989,7 +1445,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 128.27 116.84 0)
+			(at 114.3 138.43 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -998,7 +1454,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 128.27 116.84 0)
+			(at 114.3 138.43 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1089,7 +1545,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 115.57 116.84 0)
+		(at 101.6 138.43 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1098,7 +1554,7 @@
 		(fields_autoplaced yes)
 		(uuid "46db5530-2c20-4dc2-b2ae-305273c970cc")
 		(property "Reference" "C5"
-			(at 119.38 115.5699 0)
+			(at 105.41 137.1599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1107,7 +1563,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 119.38 118.1099 0)
+			(at 105.41 139.6999 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1116,7 +1572,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 116.5352 120.65 0)
+			(at 102.5652 142.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1125,7 +1581,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 115.57 116.84 0)
+			(at 101.6 138.43 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1134,7 +1590,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 115.57 116.84 0)
+			(at 101.6 138.43 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1159,7 +1615,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 128.27 107.95 0)
+		(at 114.3 129.54 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1168,7 +1624,7 @@
 		(fields_autoplaced yes)
 		(uuid "4ccc8dda-e3b6-4562-bba5-2bf0e3ef586c")
 		(property "Reference" "#PWR029"
-			(at 128.27 111.76 0)
+			(at 114.3 133.35 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1177,7 +1633,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 128.27 102.87 0)
+			(at 114.3 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1185,7 +1641,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 128.27 107.95 0)
+			(at 114.3 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1194,7 +1650,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 128.27 107.95 0)
+			(at 114.3 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1203,7 +1659,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 128.27 107.95 0)
+			(at 114.3 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1225,7 +1681,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 115.57 107.95 0)
+		(at 101.6 129.54 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1234,7 +1690,7 @@
 		(fields_autoplaced yes)
 		(uuid "4f6a3a02-24ad-455f-acf2-a7fbec8ec639")
 		(property "Reference" "#PWR027"
-			(at 115.57 111.76 0)
+			(at 101.6 133.35 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1243,7 +1699,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 115.57 102.87 0)
+			(at 101.6 124.46 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1251,7 +1707,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 115.57 107.95 0)
+			(at 101.6 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1260,7 +1716,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 115.57 107.95 0)
+			(at 101.6 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1269,7 +1725,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 115.57 107.95 0)
+			(at 101.6 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1357,16 +1813,17 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 128.27 124.46 0)
+		(at 133.35 121.92 0)
+		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "6ea1ba12-aaf5-420f-b808-ee0c3880d05e")
-		(property "Reference" "#PWR030"
-			(at 128.27 130.81 0)
+		(uuid "5f5204db-5060-4f41-afbf-5011898644e1")
+		(property "Reference" "#PWR0103"
+			(at 133.35 128.27 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1375,7 +1832,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 128.27 129.54 0)
+			(at 133.35 127 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1383,7 +1840,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 128.27 124.46 0)
+			(at 133.35 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1392,7 +1849,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 128.27 124.46 0)
+			(at 133.35 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1401,7 +1858,73 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 128.27 124.46 0)
+			(at 133.35 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "dc8841c6-c23d-44ed-a9fc-dcbbfda8688f")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
+					(reference "#PWR0103")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 114.3 146.05 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "6ea1ba12-aaf5-420f-b808-ee0c3880d05e")
+		(property "Reference" "#PWR030"
+			(at 114.3 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 114.3 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 114.3 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 114.3 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 114.3 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1416,6 +1939,205 @@
 			(project "NixieClock_MainBoard"
 				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
 					(reference "#PWR030")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 133.35 66.04 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "82c67862-ea27-4e0e-a391-8b427ef01d9d")
+		(property "Reference" "#PWR0101"
+			(at 133.35 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 133.35 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 133.35 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 133.35 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 133.35 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "7b578069-a41d-4634-ac41-025320922aa8")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
+					(reference "#PWR0101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 152.4 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9c36f5be-76d8-4503-b5a4-5d84ab3e77ee")
+		(property "Reference" "#PWR099"
+			(at 152.4 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 152.4 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 152.4 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 152.4 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 152.4 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ae308197-2693-44da-8c9e-936f5b563307")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
+					(reference "#PWR099")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 152.4 92.71 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "a0abe4a6-a143-4359-a8d2-322095b660fc")
+		(property "Reference" "#PWR097"
+			(at 152.4 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 152.4 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 152.4 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 152.4 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 152.4 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c7298f29-f50f-4c7d-b07a-256f1f8b5cdd")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
+					(reference "#PWR097")
 					(unit 1)
 				)
 			)
@@ -1512,16 +2234,17 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 115.57 124.46 0)
+		(at 133.35 86.36 0)
+		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "cce8b30f-13ee-4c6d-9120-ae871947cadd")
-		(property "Reference" "#PWR028"
-			(at 115.57 130.81 0)
+		(uuid "c2e23230-3184-4c77-8c8a-0b271eeecc1e")
+		(property "Reference" "#PWR095"
+			(at 133.35 92.71 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1530,7 +2253,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 115.57 129.54 0)
+			(at 133.35 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1538,7 +2261,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 115.57 124.46 0)
+			(at 133.35 86.36 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1547,7 +2270,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 115.57 124.46 0)
+			(at 133.35 86.36 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1556,7 +2279,210 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 115.57 124.46 0)
+			(at 133.35 86.36 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "fab82300-cd2e-479d-be33-21e20a9fe812")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
+					(reference "#PWR095")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 133.35 101.6 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "c4551b62-95b0-414f-9e08-5558d0951805")
+		(property "Reference" "#PWR0105"
+			(at 133.35 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 133.35 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 133.35 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 133.35 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 133.35 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "7078122c-d1d3-402d-9498-2e4feae11810")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
+					(reference "#PWR0105")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 152.4 87.63 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ca9eac46-ee96-4317-8024-21375582c72d")
+		(property "Reference" "C23"
+			(at 148.59 86.3599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100nF"
+			(at 148.59 88.8999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 151.4348 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 152.4 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 152.4 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "3dba4aaa-c5e0-4a64-ae9e-a4a50163d322")
+		)
+		(pin "2"
+			(uuid "f2805a3a-7228-4f03-af36-fa4ddd4f16d5")
+		)
+		(instances
+			(project "NixieClock_MainBoard"
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/5527ff92-8430-4a10-8187-a8d8404aac00"
+					(reference "C23")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 101.6 146.05 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "cce8b30f-13ee-4c6d-9120-ae871947cadd")
+		(property "Reference" "#PWR028"
+			(at 101.6 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 101.6 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 101.6 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 101.6 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 101.6 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
