@@ -1020,7 +1020,7 @@
 				)
 			)
 		)
-		(symbol "Transistor_FET:Si4532DY"
+		(symbol "Transistor_FET:BSS123"
 			(pin_names hide)
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -1034,7 +1034,7 @@
 					(justify left)
 				)
 			)
-			(property "Value" "Si4532DY"
+			(property "Value" "BSS123"
 				(at 5.08 0 0)
 				(effects
 					(font
@@ -1043,7 +1043,7 @@
 					(justify left)
 				)
 			)
-			(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
 				(at 5.08 -1.905 0)
 				(effects
 					(font
@@ -1054,7 +1054,7 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "https://www.onsemi.com/pub/Collateral/SI4532DY-D.PDF"
+			(property "Datasheet" "http://www.diodes.com/assets/Datasheets/ds30366.pdf"
 				(at 5.08 -3.81 0)
 				(effects
 					(font
@@ -1064,7 +1064,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "3.9A Id, 30V Vds, Dual N and P Channel MOSFET, 65mOhm Ron, 10V Vgs, SO8L"
+			(property "Description" "0.17A Id, 100V Vds, N-Channel MOSFET, SOT-23"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1073,7 +1073,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "Dual N-Channel P-Channel MOSFET"
+			(property "ki_keywords" "N-Channel MOSFET"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1082,7 +1082,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "SOIC*3.9x4.9mm*P1.27mm*"
+			(property "ki_fp_filters" "SOT?23*"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1091,7 +1091,7 @@
 					(hide yes)
 				)
 			)
-			(symbol "Si4532DY_0_1"
+			(symbol "BSS123_0_1"
 				(polyline
 					(pts
 						(xy 0.254 0) (xy -2.54 0)
@@ -1188,41 +1188,6 @@
 						(type none)
 					)
 				)
-				(circle
-					(center 1.651 0)
-					(radius 2.794)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 2.54 -1.778)
-					(radius 0.254)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(circle
-					(center 2.54 1.778)
-					(radius 0.254)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-			)
-			(symbol "Si4532DY_1_1"
 				(polyline
 					(pts
 						(xy 1.016 0) (xy 2.032 0.381) (xy 2.032 -0.381) (xy 1.016 0)
@@ -1259,10 +1224,45 @@
 						(type none)
 					)
 				)
-				(pin passive line
-					(at 2.54 -5.08 90)
+				(circle
+					(center 1.651 0)
+					(radius 2.794)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.54 -1.778)
+					(radius 0.254)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(circle
+					(center 2.54 1.778)
+					(radius 0.254)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+			)
+			(symbol "BSS123_1_1"
+				(pin input line
+					(at -5.08 0 0)
 					(length 2.54)
-					(name "S"
+					(name "G"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1277,10 +1277,10 @@
 						)
 					)
 				)
-				(pin input line
-					(at -5.08 0 0)
+				(pin passive line
+					(at 2.54 -5.08 90)
 					(length 2.54)
-					(name "G"
+					(name "S"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1305,25 +1305,7 @@
 							)
 						)
 					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 2.54 5.08 270)
-					(length 2.54) hide
-					(name "D"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
+					(number "3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1332,7 +1314,175 @@
 					)
 				)
 			)
-			(symbol "Si4532DY_2_1"
+		)
+		(symbol "Transistor_FET:Si2319CDS"
+			(pin_names hide)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "Q"
+				(at 5.08 1.905 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "Si2319CDS"
+				(at 5.08 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+				(at 5.08 -1.905 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "http://www.vishay.com/docs/66709/si2319cd.pdf"
+				(at 5.08 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Description" "-4.4A Id, -40V Vds, P-Channel MOSFET, SOT-23"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "P-Channel MOSFET"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "SOT?23*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Si2319CDS_0_1"
+				(polyline
+					(pts
+						(xy 0.254 0) (xy -2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.254 1.905) (xy 0.254 -1.905)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 -1.27) (xy 0.762 -2.286)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 0.508) (xy 0.762 -0.508)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 2.286) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 2.54) (xy 2.54 1.778)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 -2.54) (xy 2.54 0) (xy 0.762 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 1.778) (xy 3.302 1.778) (xy 3.302 -1.778) (xy 0.762 -1.778)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
 				(polyline
 					(pts
 						(xy 2.286 0) (xy 1.27 0.381) (xy 1.27 -0.381) (xy 2.286 0)
@@ -1369,24 +1519,41 @@
 						(type none)
 					)
 				)
-				(pin passive line
-					(at 2.54 -5.08 90)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
+				(circle
+					(center 1.651 0)
+					(radius 2.794)
+					(stroke
+						(width 0.254)
+						(type default)
 					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
+					(fill
+						(type none)
 					)
 				)
+				(circle
+					(center 2.54 -1.778)
+					(radius 0.254)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(circle
+					(center 2.54 1.778)
+					(radius 0.254)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+			)
+			(symbol "Si2319CDS_1_1"
 				(pin input line
 					(at -5.08 0 0)
 					(length 2.54)
@@ -1397,7 +1564,25 @@
 							)
 						)
 					)
-					(number "4"
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 -5.08 90)
+					(length 2.54)
+					(name "S"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1415,25 +1600,7 @@
 							)
 						)
 					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 2.54 5.08 270)
-					(length 2.54) hide
-					(name "D"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
+					(number "3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2624,6 +2791,16 @@
 		)
 		(uuid "ffbd37fe-4140-42b3-a8cc-ef54052c5179")
 	)
+	(text "SI2399DS-T1-GE3"
+		(exclude_from_sim no)
+		(at 115.316 138.176 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "752e6dad-985c-4b22-84d9-927b5f845890")
+	)
 	(hierarchical_label "VCC"
 		(shape output)
 		(at 127 177.8 0)
@@ -2875,6 +3052,82 @@
 			(project "NixieClock_MainBoard"
 				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/e1d3402d-a317-4c73-b48d-1dbf4ee272dd"
 					(reference "#PWR050")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Transistor_FET:BSS123")
+		(at 114.3 162.56 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0fd511e2-53fa-4457-b4f5-a767b4eed40f")
+		(property "Reference" "Q3"
+			(at 120.65 161.2899 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "BSS123"
+			(at 120.65 163.8299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+			(at 119.38 164.465 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "http://www.diodes.com/assets/Datasheets/ds30366.pdf"
+			(at 119.38 166.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Description" "0.17A Id, 100V Vds, N-Channel MOSFET, SOT-23"
+			(at 114.3 162.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "02860986-4782-4341-956d-3c60d58ea69c")
+		)
+		(pin "2"
+			(uuid "f55334a9-8327-4664-b33d-4769ae0c7eee")
+		)
+		(pin "1"
+			(uuid "2265b3b1-9a38-4fe1-8a71-77b1a101a801")
+		)
+		(instances
+			(project ""
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/e1d3402d-a317-4c73-b48d-1dbf4ee272dd"
+					(reference "Q3")
 					(unit 1)
 				)
 			)
@@ -4159,6 +4412,81 @@
 			(project "NixieClock_MainBoard"
 				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/e1d3402d-a317-4c73-b48d-1dbf4ee272dd"
 					(reference "#PWR024")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Transistor_FET:Si2319CDS")
+		(at 116.84 149.86 270)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "56d3b80e-53c2-4e72-800c-b52842b1a1a9")
+		(property "Reference" "Q4"
+			(at 116.84 140.97 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Si2319CDS"
+			(at 116.84 143.51 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+			(at 114.935 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "http://www.vishay.com/docs/66709/si2319cd.pdf"
+			(at 113.03 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Description" "-4.4A Id, -40V Vds, P-Channel MOSFET, SOT-23"
+			(at 116.84 149.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "21932226-f55e-4ba4-bc39-7c8dbf7371d8")
+		)
+		(pin "2"
+			(uuid "926a38c4-5fae-4ff9-8e6c-e182f4e8c1f0")
+		)
+		(pin "1"
+			(uuid "252d1e11-333d-40ac-a58b-b3b963264f87")
+		)
+		(instances
+			(project ""
+				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/e1d3402d-a317-4c73-b48d-1dbf4ee272dd"
+					(reference "Q4")
 					(unit 1)
 				)
 			)
@@ -5837,97 +6165,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:Si4532DY")
-		(at 114.3 162.56 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "d05f54ce-cd94-4e11-8619-8d8a31166834")
-		(property "Reference" "Q3"
-			(at 120.65 161.2899 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Si4532DY"
-			(at 120.65 163.8299 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
-			(at 119.38 164.465 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/SI4532DY-D.PDF"
-			(at 119.38 166.37 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Description" "3.9A Id, 30V Vds, Dual N and P Channel MOSFET, 65mOhm Ron, 10V Vgs, SO8L"
-			(at 114.3 162.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "c6ca6753-29c0-4365-81a5-66710140aed1")
-		)
-		(pin "1"
-			(uuid "4a07fa23-15d7-464f-bfbf-d310f0bf1ea0")
-		)
-		(pin "5"
-			(uuid "ff07b5a3-c67f-47a1-8c8f-00e15e945876")
-		)
-		(pin "2"
-			(uuid "a44e1b33-103b-4b06-be0f-62a44fa76fcb")
-		)
-		(pin "4"
-			(uuid "c692dc08-1a7a-4747-a373-3eca1e286417")
-		)
-		(pin "3"
-			(uuid "1d42459d-ca51-4c42-8b94-8e1651b02bc9")
-		)
-		(pin "6"
-			(uuid "ee8c1b0b-bcf8-4443-804e-25b724eee1a2")
-		)
-		(pin "8"
-			(uuid "a56b08e3-4dc9-41ba-a4c3-4c9fbac9e946")
-		)
-		(instances
-			(project ""
-				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/e1d3402d-a317-4c73-b48d-1dbf4ee272dd"
-					(reference "Q3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:+3.3V")
 		(at 177.8 52.07 270)
 		(unit 1)
@@ -5990,95 +6227,6 @@
 				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/e1d3402d-a317-4c73-b48d-1dbf4ee272dd"
 					(reference "#PWR082")
 					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Transistor_FET:Si4532DY")
-		(at 116.84 149.86 270)
-		(mirror x)
-		(unit 2)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "d760405d-a317-4c58-92c5-bec87e80dad5")
-		(property "Reference" "Q3"
-			(at 116.84 140.97 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "Si4532DY"
-			(at 116.84 143.51 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
-			(at 114.935 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/SI4532DY-D.PDF"
-			(at 113.03 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Description" "3.9A Id, 30V Vds, Dual N and P Channel MOSFET, 65mOhm Ron, 10V Vgs, SO8L"
-			(at 116.84 149.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "c6ca6753-29c0-4365-81a5-66710140aed1")
-		)
-		(pin "1"
-			(uuid "4a07fa23-15d7-464f-bfbf-d310f0bf1ea0")
-		)
-		(pin "5"
-			(uuid "ff07b5a3-c67f-47a1-8c8f-00e15e945876")
-		)
-		(pin "2"
-			(uuid "a44e1b33-103b-4b06-be0f-62a44fa76fcb")
-		)
-		(pin "4"
-			(uuid "c692dc08-1a7a-4747-a373-3eca1e286417")
-		)
-		(pin "3"
-			(uuid "1d42459d-ca51-4c42-8b94-8e1651b02bc9")
-		)
-		(pin "6"
-			(uuid "ee8c1b0b-bcf8-4443-804e-25b724eee1a2")
-		)
-		(pin "8"
-			(uuid "a56b08e3-4dc9-41ba-a4c3-4c9fbac9e946")
-		)
-		(instances
-			(project ""
-				(path "/5ddb5910-d1ea-4e23-971a-19156fc3bbe9/e1d3402d-a317-4c73-b48d-1dbf4ee272dd"
-					(reference "Q3")
-					(unit 2)
 				)
 			)
 		)
