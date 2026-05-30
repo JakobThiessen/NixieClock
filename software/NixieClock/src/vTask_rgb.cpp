@@ -3,6 +3,7 @@
 #include "freertos/queue.h"
 
 #include <stdint.h>
+#include <math.h>
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include "vTask_rgb.h"
@@ -52,76 +53,74 @@ uint32_t Wheel(byte WheelPos)
 
 void tCodeRGB(void *pvParameters)
 {
-    uint8_t wait = 30;
-
-    strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-    strip.show();            // Turn OFF all pixels ASAP
-    strip.setBrightness(10); // Set BRIGHTNESS to about 1/5 (max = 255)
-    for(int i = 0; i < LED_COUNT; i++)
-    {
-        strip.setPixelColor(i, 0x00FF0000); //  Update delay time
-    }
+    strip.begin();
+    strip.show();            // all off
+    strip.setBrightness(10);
 
     static rgbConfigStruct rgbConfigRec;
-    static bool status = false;
-    static bool trigger = false;
+    rgbConfigRec.rgbMode       = 0;
+    rgbConfigRec.rgbSwitch     = false;
+    rgbConfigRec.rgbBrigthness = 128;
+    rgbConfigRec.rgbR          = 255;
+    rgbConfigRec.rgbG          = 102;
+    rgbConfigRec.rgbB          = 0;
+
+    static float breathPhase = 0.0f;
 
     for (;;)
     {
         if (xQueue_RGB_Config != NULL)
-        {                          
-            status = xQueueReceive(xQueue_RGB_Config, &rgbConfigRec, pdMS_TO_TICKS(20) );
-        }
-        else
         {
-            Serial.print("--> xQueue_RGB_Config is NULL");
+            (void)xQueueReceive(xQueue_RGB_Config, &rgbConfigRec, pdMS_TO_TICKS(10));
         }
-        vTaskDelay(pdMS_TO_TICKS(20));
-        if (status)
+
+        switch (rgbConfigRec.rgbMode)
         {
-            if(rgbConfigRec.rgbSwitch)
-            {
-                strip.setBrightness(rgbConfigRec.rgbBrigthness); // Set BRIGHTNESS to about 1/5 (max = 255)
-            }
-            else
-            {
+            case 0: // Aus
                 strip.setBrightness(0);
-            }
-        }
-        /*
-        //Serial.print("Task RGB running: "); Serial.println( millis());
-        if (pixelInterval != wait)
-            pixelInterval = wait;
-        for (uint16_t i = 0; i < pixelNumber; i++)
-        {
-            strip.setPixelColor(i, Wheel((i + pixelCycle) & 255)); //  Update delay time
-        }
-        strip.show(); //  Update strip to match
-        pixelCycle++; //  Advance current cycle
-        if (pixelCycle >= 256)
-            pixelCycle = 0; //  Loop the cycle back to the begining
-        */
+                strip.show();
+                vTaskDelay(pdMS_TO_TICKS(100));
+                break;
 
+            case 1: // Statische Farbe
+                strip.setBrightness(rgbConfigRec.rgbBrigthness);
+                for (int i = 0; i < LED_COUNT; i++)
+                    strip.setPixelColor(i, strip.Color(rgbConfigRec.rgbR, rgbConfigRec.rgbG, rgbConfigRec.rgbB));
+                strip.show();
+                vTaskDelay(pdMS_TO_TICKS(100));
+                break;
 
-        for (uint16_t i = 0; i < LED_COUNT; i++)
-        {
-            uint32_t color_1 = 0xFF0000;
-            uint32_t color_2 = 0x00FF00;
-            uint32_t color;
+            case 2: // Regenbogen
+                strip.setBrightness(rgbConfigRec.rgbBrigthness);
+                for (uint16_t i = 0; i < LED_COUNT; i++)
+                    strip.setPixelColor(i, Wheel((i + pixelCycle) & 255));
+                strip.show();
+                if (++pixelCycle >= 256) pixelCycle = 0;
+                vTaskDelay(pdMS_TO_TICKS(30));
+                break;
 
-            if(i % 2 == 0)
+            case 3: // Atmen (Breathing)
             {
-                color = trigger ? color_1 : color_2;
-            }
-            else
-            {
-                color = trigger ? color_2 : color_1;
+                breathPhase += 0.04f;
+                if (breathPhase > 6.2832f) breathPhase -= 6.2832f;
+                uint8_t bright = (uint8_t)((sinf(breathPhase) + 1.0f) * 0.5f * rgbConfigRec.rgbBrigthness);
+                strip.setBrightness(bright);
+                for (int i = 0; i < LED_COUNT; i++)
+                    strip.setPixelColor(i, strip.Color(rgbConfigRec.rgbR, rgbConfigRec.rgbG, rgbConfigRec.rgbB));
+                strip.show();
+                vTaskDelay(pdMS_TO_TICKS(20));
+                break;
             }
 
-            strip.setPixelColor(i, color); //  Update delay time
+            case 4: // Farbwechsel (Color Wipe)
+                strip.setBrightness(rgbConfigRec.rgbBrigthness);
+                colorWipe(strip.Color(rgbConfigRec.rgbR, rgbConfigRec.rgbG, rgbConfigRec.rgbB), 50);
+                vTaskDelay(pdMS_TO_TICKS(pixelInterval));
+                break;
+
+            default:
+                vTaskDelay(pdMS_TO_TICKS(100));
+                break;
         }
-        strip.show(); //  Update strip to match
-        trigger = !trigger;
-        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }

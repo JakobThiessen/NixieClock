@@ -32,9 +32,11 @@
 #include "icon\WLAN.h"
 
 #include <common.h>
+#include <Preferences.h>
 #include <vTask_rgb.h>
 #include <vTask_uart.h>
 #include "vTask_WebServer.h"
+#include "bootAnim.h"
 
 /**************************** */
 /*** DEFINES              *** */
@@ -73,6 +75,8 @@ rgbConfigStruct rgbConfig;
 systemConfigStruct systemConfig;
 clockConfiguration clockConfig;
 
+SemaphoreHandle_t xSpiMutex = NULL;  // shared SPI bus mutex
+
 TaskHandle_t taskRGB_LED;
 TaskHandle_t task_Uart;
 TaskHandle_t task_Display;
@@ -89,6 +93,12 @@ void tCodeDisplay(void *pvParameters);
 
 void handle_cs(uint8_t spiDeviceNumber, uint8_t level)
 {
+    // Take SPI mutex when starting a transaction (CS→LOW),
+    // release it when ending (CS→HIGH). Timeout: 200ms.
+    if (level == LOW && xSpiMutex) {
+        xSemaphoreTakeRecursive(xSpiMutex, pdMS_TO_TICKS(200));
+    }
+
     switch(spiDeviceNumber)
     {
         case 0:
@@ -117,6 +127,10 @@ void handle_cs(uint8_t spiDeviceNumber, uint8_t level)
 
         default:
             break;
+    }
+
+    if (level == HIGH && xSpiMutex) {
+        xSemaphoreGiveRecursive(xSpiMutex);
     }
 }
 
@@ -209,11 +223,13 @@ void drawSystem()
     tft.fillScreen(ST77XX_BLACK);
     handle_cs(0, HIGH);
 
-    handle_cs(0, LOW);
     //WLAN and IP
-    //image_no_sd_card
-    tft.drawRGBBitmap(0, 0, background_1, 160, 128);
-    handle_cs(0, HIGH);
+    if (systemConfig.backgroundEnabled)
+    {
+        handle_cs(0, LOW);
+        tft.drawRGBBitmap(0, 0, background_1, 160, 128);
+        handle_cs(0, HIGH);
+    }
 
     if(systemConfig.sdCardDetected)
     {
@@ -246,7 +262,7 @@ void drawSystem()
     handle_cs(0, HIGH);
 
     handle_cs(0, LOW);
-    tft.setTextColor(ST7735_BLACK);
+    tft.setTextColor(systemConfig.backgroundEnabled ? ST7735_BLACK : ST77XX_WHITE);
     handle_cs(0, HIGH);
 
     handle_cs(0, LOW);
@@ -311,9 +327,12 @@ void drawCalendar(int currentDay, int month, int year, uint8_t shortMonthWithYea
     tft.fillScreen(ST77XX_BLACK);
     handle_cs(0, HIGH);
 
-    handle_cs(0, LOW);
-    tft.drawRGBBitmap(0, 0, bg_advent_2, 227, 128);
-    handle_cs(0, HIGH);
+    if (systemConfig.backgroundEnabled)
+    {
+        handle_cs(0, LOW);
+        tft.drawRGBBitmap(0, 0, bg_advent_2, 227, 128);
+        handle_cs(0, HIGH);
+    }
 
     handle_cs(0, LOW);
     tft.setTextColor(ST77XX_CYAN);
@@ -475,9 +494,7 @@ void drawCalendar(int currentDay, int month, int year, uint8_t shortMonthWithYea
 */
 void drawBirthday(uint8_t pict)
 {
-    int disp_w = 160;
-    int disp_h = 128;
-
+    (void)pict;
     handle_cs(0, LOW);
     tft.fillScreen(ST77XX_BLACK);
     handle_cs(0, HIGH);
@@ -592,9 +609,6 @@ void drawTime(uint8_t hour, uint8_t min, uint8_t sec, int timestatus)
     uint8_t digit_4;
     bool update_hour = true;
     bool update_min = true;
-    uint8_t fontSize = 4;       // Orig Font size = 20
-    uint8_t textPosY = 160;     // Orig Font y = 50
-    uint8_t textPosX = 2;
     old_sec = sec;
 
     if (timestatus == 0)
@@ -894,12 +908,27 @@ void setup(void)
 
     Serial.print("--> Init TFT(5) time: "); Serial.println( millis());
 
-    // https://werner.rothschopf.net/microcontroller/202402_arduino_esp_ntp_user_configuration.htm
-    // Example: Timezone Configuration via Webserver Interface
-    static char* ntpServer = "de.pool.ntp.org";
-    static char* germanyTimeZone = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
+    // Initialize systemConfig defaults (Preferences loaded later in WebServer task)
+    strncpy(systemConfig.ntpServer, "de.pool.ntp.org", sizeof(systemConfig.ntpServer) - 1);
+    systemConfig.ntpServer[sizeof(systemConfig.ntpServer) - 1] = '\0';
+    systemConfig.utcOffset          = 1;
+    systemConfig.displayIntervalSec = 5;
+    systemConfig.displayBrightness  = 0xFFF;
+    systemConfig.slideshowEnabled   = false;
+    systemConfig.calendarEnabled    = true;
+    systemConfig.backgroundEnabled  = false;
+    systemConfig.bootAnimMode       = 0;  // default: keine Animation
 
-    configTzTime( germanyTimeZone, ntpServer); //sets TZ and starts NTP sync
+    // RGB defaults – overwritten by Preferences at boot if keys exist
+    rgbConfig.rgbMode       = 0;      // Aus
+    rgbConfig.rgbSwitch     = false;
+    rgbConfig.rgbBrigthness = 128;
+    rgbConfig.rgbR          = 255;
+    rgbConfig.rgbG          = 102;
+    rgbConfig.rgbB          = 0;
+
+    // Initial NTP config with defaults (WebServer task will reload from Preferences)
+    configTzTime("CET-1CEST,M3.5.0,M10.5.0/3", systemConfig.ntpServer);
     //configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
     /*
@@ -927,6 +956,8 @@ void setup(void)
         }
         
     }
+
+    xSpiMutex = xSemaphoreCreateRecursiveMutex();
 
     xTaskCreate(
         tCodeServerTask, /* Task function. */
@@ -996,72 +1027,66 @@ void tCodeDisplay(void *pvParameters)
     state_tft_info = 0;
     bool calenderIsDrawn = false;
 
+    // Boot-Animation: Modus aus NVS lesen (vor WebServer-Task, daher eigener Prefs-Block)
+    {
+        Preferences animPrefs;
+        animPrefs.begin("nixie", true);  // read-only
+        if (animPrefs.isKey("anim_m"))
+            systemConfig.bootAnimMode = animPrefs.getUChar("anim_m");
+        animPrefs.end();
+    }
+    if (systemConfig.bootAnimMode != 0) {
+        runBootAnimation(systemConfig.bootAnimMode, 10000);
+    }
+
     // Boot-Statusanzeige: SD-Karte und WLAN auf dem 1.8" TFT (tft) zeigen
+    xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
     drawSystem();
+    xSemaphoreGiveRecursive(xSpiMutex);
     vTaskDelay(pdMS_TO_TICKS(3000));
 
-    int offset = 0;
     for (;;)
     {
         int timestatus = getLocTime(&day, &month, &year, &hour, &min, &sec);
 
+        xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
         drawTime(hour, min, sec, timestatus);
-        //if (timestatus == 0 && !calenderIsDrawn)
-        if (timestatus == 0)
+        if (timestatus == 0 && systemConfig.calendarEnabled)
         {
             drawCalendar(day, month + 1, year + 1900, 1);
             calenderIsDrawn = true;
-
         }
+        xSemaphoreGiveRecursive(xSpiMutex);
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        if( day == 19)
-        {
+        vTaskDelay(pdMS_TO_TICKS(1000));  // SD-Zugriff vom WebServer möglich
+
+        if (day == 19) {
+            xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
             drawBirthday(0);
+            xSemaphoreGiveRecursive(xSpiMutex);
         }
 
-        //uint16_t r = random(0, 11);
-        //drawPowerSupply(5000 + r, 1000 + r);
-        drawAdventsKerzen();
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        if( day == 19)
-        {
+        if (systemConfig.slideshowEnabled) {
+            xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
+            drawAdventsKerzen();
+            xSemaphoreGiveRecursive(xSpiMutex);
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));  // SD-Zugriff vom WebServer möglich
+
+        if (day == 19) {
+            xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
             drawBirthday(1);
+            xSemaphoreGiveRecursive(xSpiMutex);
         }
 
-/*
-        switch (state_tft_info)
-        {
-            case 0:
-                // Months are 0-based in tm structure
-                // Years are years since 1900 in tm structure
-                drawCalendar(day, month + 1, year + 1900, 1);
-                break;
+        vTaskDelay(pdMS_TO_TICKS(2000));  // SD-Zugriff vom WebServer möglich
 
-            case 1:
-                drawWeather(16);
-                break;
-
-            case 2:
-                drawSystem();
-                break;
-
-            case 3:
-                drawAdvent();
-                break;
-            default:
-                break;
-        }
-        state_tft_info++;
-        if(state_tft_info > 3) state_tft_info = 0;
-        */
-
-        vTaskDelay(pdMS_TO_TICKS(2000));
-
-        // Systemstatus periodisch auf dem 1.8" TFT refreshen (SD + WiFi + IP)
+        xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
         drawSystem();
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        xSemaphoreGiveRecursive(xSpiMutex);
 
+        vTaskDelay(pdMS_TO_TICKS(2000));  // SD-Zugriff vom WebServer möglich
     }
     
 }

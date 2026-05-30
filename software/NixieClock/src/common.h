@@ -6,6 +6,7 @@
 #include "freertos/FreeRTOSConfig.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/semphr.h"
 
 #include <time.h>
 
@@ -48,6 +49,10 @@ extern "C" {
 
 #define SPI_FREQUENCY 10000000U
 
+#define FW_VERSION "3.0.0"
+#define FW_BUILD_DATE __DATE__
+#define FW_BUILD_TIME __TIME__
+
 extern QueueHandle_t xQueue_RGB_Config;
 extern QueueHandle_t xQueue_WiFi;
 
@@ -55,12 +60,23 @@ typedef struct{
     uint8_t rgbBrigthness;
     bool rgbSwitch;
     uint16_t rgbMode;
+    uint8_t rgbR;
+    uint8_t rgbG;
+    uint8_t rgbB;
 }rgbConfigStruct;
 
 typedef struct{
     bool wifiConnected;
     IPAddress ip;
     bool sdCardDetected;
+    uint16_t displayBrightness;
+    uint16_t displayIntervalSec;
+    char ntpServer[64];
+    int8_t utcOffset;
+    bool slideshowEnabled;
+    bool calendarEnabled;
+    bool backgroundEnabled;
+    uint8_t bootAnimMode;   // 0=keine, 1=Matrix, 2=NixieSlot, 3=Farbwellen
 }systemConfigStruct;
 
 
@@ -100,6 +116,7 @@ typedef struct{
 extern rgbConfigStruct rgbConfig;
 extern systemConfigStruct systemConfig;
 extern clockConfiguration clockConfig;
+extern SemaphoreHandle_t xSpiMutex;  // shared SPI bus mutex
 
 #ifdef __cplusplus
 }
