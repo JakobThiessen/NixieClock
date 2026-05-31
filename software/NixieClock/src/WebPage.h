@@ -112,21 +112,6 @@ input[type=color]{width:44px;height:32px;border:1px solid var(--bd);border-radiu
 .tgl-sl:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s}
 input:checked+.tgl-sl{background:var(--ac)}
 input:checked+.tgl-sl:before{transform:translateX(20px)}
-.sd-layout{display:flex;gap:12px;min-height:420px}
-.sd-tree-card{flex:0 0 240px;overflow-y:auto;max-height:65vh;display:flex;flex-direction:column}
-.sd-prev-card{flex:1;overflow:auto;display:flex;flex-direction:column;min-height:200px}
-#sd-tree{flex:1;overflow-y:auto}
-#sd-prev{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:120px}
-#sd-prev img{max-width:100%;max-height:420px;object-fit:contain;border-radius:6px}
-.sd-item{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;cursor:pointer;font-size:.82rem;user-select:none;transition:.15s}
-.sd-item:hover{background:var(--bg)}
-.sd-item.sel{background:var(--ac)!important;color:#0d1117}
-.sd-dir{color:var(--ac)}
-.sd-file{color:var(--tx)}
-.sd-caret{display:inline-block;width:10px;font-size:.65rem;transition:transform .2s;flex-shrink:0}
-.sd-caret.open{transform:rotate(90deg)}
-.sd-children{margin-left:14px}
-.sd-sz{margin-left:auto;color:var(--mu);font-size:.72rem;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -138,7 +123,6 @@ input:checked+.tgl-sl:before{transform:translateX(20px)}
 <button class="tb on" onclick="tab('sys',this)">System</button>
 <button class="tb" onclick="tab('rgb',this)">NeoPixel</button>
 <button class="tb" onclick="tab('dsp',this)">Display</button>
-<button class="tb" onclick="tab('sdc',this);initSd()">SD-Karte</button>
 </div>
 <div class="wrap">
 <div id="sys" class="pn on">
@@ -203,21 +187,38 @@ input:checked+.tgl-sl:before{transform:translateX(20px)}
 </div>
 <div id="dsp" class="pn">
 <div class="card">
-<div class="ct">Anzeigedauer</div>
+<div class="ct">Uhrzeit</div>
+<div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+<div style="flex:1;min-width:200px">
 <div class="fr">
-<span class="fl">Dauer je Bild</span>
-<input type="range" id="dp-i" min="1" max="60" value="5" oninput="document.getElementById('dp-iv').textContent=this.value+' s'">
-<span class="vd" id="dp-iv">5 s</span>
+<span class="fl">Ziffernfarbe</span>
+<input type="color" id="cl-fg" value="#f800f8" oninput="updSeg()">
+</div>
+<div class="fr">
+<span class="fl">Segmenthintergrund</span>
+<input type="color" id="cl-bg" value="#181818" oninput="updSeg()">
+</div>
+<div class="fr"><span class="fl"></span><button class="btn" onclick="saveClk()">Ubernehmen</button></div>
+</div>
+<div style="flex-shrink:0;text-align:center">
+<svg viewBox="0 0 60 100" width="60" height="100">
+<rect width="60" height="100" rx="6" id="seg-bg" fill="#181818"/>
+<rect x="12" y="5" width="36" height="6" rx="2" class="seg-fg" fill="#f800f8"/>
+<rect x="12" y="47" width="36" height="6" rx="2" class="seg-fg" fill="#f800f8"/>
+<rect x="12" y="89" width="36" height="6" rx="2" class="seg-fg" fill="#f800f8"/>
+<rect x="5" y="12" width="6" height="34" rx="2" class="seg-fg" fill="#f800f8"/>
+<rect x="49" y="12" width="6" height="34" rx="2" class="seg-fg" fill="#f800f8"/>
+<rect x="5" y="54" width="6" height="34" rx="2" class="seg-fg" fill="#f800f8"/>
+<rect x="49" y="54" width="6" height="34" rx="2" class="seg-fg" fill="#f800f8"/>
+</svg>
+<div style="font-size:.7rem;color:var(--mu);margin-top:4px">Vorschau</div>
+</div>
 </div>
 </div>
 <div class="card">
-<div class="ct">Anzeige-Optionen</div>
+<div class="ct">Kalender</div>
 <div class="fr">
-<span class="fl">Bilderwechsel</span>
-<label class="tgl"><input type="checkbox" id="dp-slide"><span class="tgl-sl"></span></label>
-</div>
-<div class="fr">
-<span class="fl">Kalender</span>
+<span class="fl">Kalender anzeigen</span>
 <label class="tgl"><input type="checkbox" id="dp-cal" checked><span class="tgl-sl"></span></label>
 </div>
 <div class="fr">
@@ -226,41 +227,27 @@ input:checked+.tgl-sl:before{transform:translateX(20px)}
 </div>
 </div>
 <div class="card">
-<div class="ct">Helligkeit Displays</div>
+<div class="ct">Display</div>
 <div class="fr">
 <span class="fl">Helligkeit</span>
 <input type="range" id="dp-b" min="0" max="4095" value="4095" oninput="document.getElementById('dp-bv').textContent=Math.round(this.value/40.95)+'%'">
 <span class="vd" id="dp-bv">100%</span>
 </div>
+<div class="fr">
+<span class="fl">Bilderwechsel</span>
+<label class="tgl"><input type="checkbox" id="dp-slide"><span class="tgl-sl"></span></label>
+</div>
+<div class="fr">
+<span class="fl">Dauer je Bild</span>
+<input type="range" id="dp-i" min="1" max="60" value="5" oninput="document.getElementById('dp-iv').textContent=this.value+' s'">
+<span class="vd" id="dp-iv">5 s</span>
+</div>
 <div class="fr"><span class="fl"></span><button class="btn" onclick="saveDisp()">Speichern</button></div>
-</div>
-<div class="card">
-<div class="ct">Boot-Animation</div>
-<div class="mg" id="anim-mg">
-<button class="mb on" onclick="setAnim(0,this)">Keine</button>
-<button class="mb" onclick="setAnim(1,this)">Matrix</button>
-<button class="mb" onclick="setAnim(2,this)">Nixie-Slot</button>
-<button class="mb" onclick="setAnim(3,this)">Farbwellen</button>
-</div>
-<div class="fr" style="margin-top:10px"><span class="fl" style="font-size:.75rem;color:var(--mu)">Gilt ab dem n&auml;chsten Neustart</span><button class="btn" onclick="saveAnim()">Speichern</button></div>
-</div>
-</div>
-</div>
-<div id="sdc" class="pn">
-<div class="sd-layout">
-<div class="card sd-tree-card">
-<div class="ct" style="display:flex;align-items:center">SD-Karte<button class="btn" style="margin-left:auto;padding:2px 8px;font-size:.75rem" onclick="reloadSd()">&#8635;</button></div>
-<div id="sd-tree"><span style="color:var(--mu);font-size:.82rem">Tab anklicken zum Laden...</span></div>
-</div>
-<div class="card sd-prev-card">
-<div class="ct" id="sd-fname">Vorschau</div>
-<div id="sd-prev"><span style="color:var(--mu);font-size:.85rem">Datei ausw&#228;hlen...</span></div>
-</div>
 </div>
 </div>
 <div id="toast"></div>
 <script>
-var cMode=0,rgbInitDone=false,dispInitDone=false,animInitDone=false,curAnim=0;
+var cMode=0,rgbInitDone=false,dispInitDone=false,clockInitDone=false;
 function tab(id,b){document.querySelectorAll('.pn').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tb').forEach(x=>x.classList.remove('on'));document.getElementById(id).classList.add('on');b.classList.add('on');}
 function toast(m,ok){var t=document.getElementById('toast');t.textContent=m;t.style.borderColor=ok?'var(--ok)':'var(--er)';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2500);}
 function gx(x,t){var m=x.match('<'+t+'>([\\s\\S]*?)<\\/'+t+'>');return m?m[1]:'';}
@@ -278,75 +265,18 @@ document.getElementById('fi-cp').textContent=gx(x,'CPU')+' MHz';
 document.getElementById('fi-ch').textContent=gx(x,'CHIP');
 var ns=gx(x,'NTP');if(ns&&document.getElementById('ntp-s').value==='')document.getElementById('ntp-s').value=ns;
 var utc=gx(x,'UTC');if(utc!='')document.getElementById('ntp-u').value=utc;
-if(!rgbInitDone){cMode=parseInt(gx(x,'RGBM'))||0;document.querySelectorAll('.mb').forEach(function(b,i){b.classList.toggle('on',i===cMode);});rgbInitDone=true;}
+if(!rgbInitDone){cMode=parseInt(gx(x,'RGBM'))||0;document.querySelectorAll('.mb').forEach(function(b,i){b.classList.toggle('on',i===cMode);});var rr=parseInt(gx(x,'RGBR'))||0,rg=parseInt(gx(x,'RGBG'))||0,rb=parseInt(gx(x,'RGBB'))||0;var rhex='#'+('0'+rr.toString(16)).slice(-2)+('0'+rg.toString(16)).slice(-2)+('0'+rb.toString(16)).slice(-2);document.getElementById('rgb-c').value=rhex;document.getElementById('rgb-p').style.background=rhex;var rbr=parseInt(gx(x,'RGBBR'))||128;document.getElementById('rgb-b').value=rbr;document.getElementById('rgb-bv').textContent=rbr;rgbInitDone=true;}
 if(!dispInitDone){var di=parseInt(gx(x,'DPINT'))||5;document.getElementById('dp-i').value=di;document.getElementById('dp-iv').textContent=di+' s';var db=parseInt(gx(x,'DPBR'))||4095;document.getElementById('dp-b').value=db;document.getElementById('dp-bv').textContent=Math.round(db/40.95)+'%';document.getElementById('dp-slide').checked=gx(x,'SLIDE')==='1';document.getElementById('dp-cal').checked=gx(x,'CAL')!=='0';document.getElementById('dp-bg').checked=gx(x,'BG')==='1';dispInitDone=true;}
-if(!animInitDone){var am=parseInt(gx(x,'ANIMM'))||0;curAnim=am;document.querySelectorAll('#anim-mg .mb').forEach(function(b,i){b.classList.toggle('on',i===am);});animInitDone=true;}
+if(!clockInitDone){var cfr=parseInt(gx(x,'CLFR'))||248,cfg2=parseInt(gx(x,'CLFG'))||0,cfb=parseInt(gx(x,'CLFB'))||248;var cbr=parseInt(gx(x,'CLBR'))||24,cbg=parseInt(gx(x,'CLBG'))||24,cbb=parseInt(gx(x,'CLBB'))||24;document.getElementById('cl-fg').value='#'+('0'+cfr.toString(16)).slice(-2)+('0'+cfg2.toString(16)).slice(-2)+('0'+cfb.toString(16)).slice(-2);document.getElementById('cl-bg').value='#'+('0'+cbr.toString(16)).slice(-2)+('0'+cbg.toString(16)).slice(-2)+('0'+cbb.toString(16)).slice(-2);updSeg();clockInitDone=true;}
 }).catch(function(){});
 }
 setInterval(poll,2000);poll();
 function saveNTP(){var s=document.getElementById('ntp-s').value.trim();var u=document.getElementById('ntp-u').value;if(!s){toast('NTP Server eingeben!',false);return;}fetch('/SET_NTP?SERVER='+encodeURIComponent(s)+'&UTC='+u).then(function(r){toast(r.ok?'NTP gespeichert':'Fehler',r.ok);}).catch(function(){toast('Fehler',false);});}
 function setMode(m,b){cMode=m;document.querySelectorAll('.mb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');}
 function sendRGB(){var h=document.getElementById('rgb-c').value;var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);var br=document.getElementById('rgb-b').value;fetch('/SET_RGB?MODE='+cMode+'&R='+r+'&G='+g+'&B='+b+'&BRIGHT='+br).then(function(r){toast(r.ok?'NeoPixel aktualisiert':'Fehler',r.ok);}).catch(function(){toast('Fehler',false);});}
-function saveDisp(){var i=document.getElementById('dp-i').value;var b=document.getElementById('dp-b').value;var sl=document.getElementById('dp-slide').checked?1:0;var ca=document.getElementById('dp-cal').checked?1:0;var bg=document.getElementById('dp-bg').checked?1:0;fetch('/SET_DISPLAY?INTERVAL='+i+'&BRIGHT='+b+'&SLIDE='+sl+'&CAL='+ca+'&BG='+bg).then(function(r){toast(r.ok?'Display gespeichert':'Fehler',r.ok);}).catch(function(){toast('Fehler',false);})}  
-function setAnim(m,b){curAnim=m;document.querySelectorAll('#anim-mg .mb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');}
-function saveAnim(){fetch('/SET_ANIM?MODE='+curAnim).then(function(r){toast(r.ok?'Animation gespeichert':'Fehler',r.ok);}).catch(function(){toast('Fehler',false);})}
-var sdLoaded=false;
-function initSd(){if(!sdLoaded){sdLoaded=true;loadDir('/',document.getElementById('sd-tree'));}}
-function reloadSd(){sdLoaded=false;loadDir('/',document.getElementById('sd-tree'));sdLoaded=true;}
-function isImg(n){return /\.(jpg|jpeg|png|bmp|gif)$/i.test(n);}
-function fmtSz(s){if(s<1024)return s+' B';if(s<1048576)return (s/1024).toFixed(1)+' KB';return (s/1048576).toFixed(1)+' MB';}
-function loadDir(path,container){
-container.innerHTML='<span style="color:var(--mu);font-size:.82rem">Lade...</span>';
-fetch('/SD_LIST?path='+encodeURIComponent(path))
-.then(function(r){return r.json();})
-.then(function(items){
-container.innerHTML='';
-if(!items||items.length===0){container.innerHTML='<span style="color:var(--mu);font-size:.8rem;padding:4px 6px">Leer</span>';return;}
-items.sort(function(a,b){if(a.type===b.type)return a.name.localeCompare(b.name);return a.type==='dir'?-1:1;});
-items.forEach(function(item){
-var fp=(path==='/'?'':path)+'/'+item.name;
-var row=document.createElement('div');
-row.className='sd-item '+(item.type==='dir'?'sd-dir':'sd-file');
-if(item.type==='dir'){
-var car=document.createElement('span');car.className='sd-caret';car.textContent='\u25B6';
-var ic=document.createElement('span');ic.textContent='\uD83D\uDCC1';
-var lb=document.createElement('span');lb.textContent=item.name;
-row.appendChild(car);row.appendChild(ic);row.appendChild(lb);
-var ch=document.createElement('div');ch.className='sd-children';ch.style.display='none';
-var isOpen=false;
-row.onclick=function(e){e.stopPropagation();isOpen=!isOpen;car.classList.toggle('open',isOpen);ch.style.display=isOpen?'block':'none';if(isOpen&&ch.innerHTML==='')loadDir(fp,ch);};
-container.appendChild(row);container.appendChild(ch);
-}else{
-var ic=document.createElement('span');ic.textContent=isImg(item.name)?'\uD83D\uDDBC\uFE0F':'\uD83D\uDCC4';
-var lb=document.createElement('span');lb.textContent=item.name;
-var sz=document.createElement('span');sz.className='sd-sz';sz.textContent=fmtSz(item.size||0);
-row.appendChild(ic);row.appendChild(lb);row.appendChild(sz);
-row.onclick=function(){
-document.querySelectorAll('.sd-item').forEach(function(x){x.classList.remove('sel');});
-row.classList.add('sel');showFile(fp,item.name,item.size||0);};
-container.appendChild(row);
-}
-});
-})
-.catch(function(){container.innerHTML='<span style="color:var(--er);font-size:.82rem;padding:4px 6px">Fehler beim Laden</span>';});}
-function showFile(path,name,size){
-document.getElementById('sd-fname').textContent=name;
-var pv=document.getElementById('sd-prev');
-pv.innerHTML='';
-if(isImg(name)){
-var img=document.createElement('img');
-img.src='/SD_FILE?path='+encodeURIComponent(path);
-img.alt=name;
-img.style.maxWidth='100%';
-img.style.maxHeight='420px';
-img.style.objectFit='contain';
-img.style.borderRadius='6px';
-img.onerror=function(){pv.innerHTML='<span style="color:var(--er)">Vorschau nicht m\u00F6glich</span>';};
-pv.appendChild(img);
-}else{
-pv.innerHTML='<div style="text-align:center"><div style="font-size:2.5rem">&#128196;</div><div style="color:var(--mu);font-size:.85rem;margin-top:8px">'+name+'</div><div style="color:var(--mu);font-size:.8rem;margin-top:4px">'+fmtSz(size)+'</div></div>';
-}
-}
+function saveDisp(){var i=document.getElementById('dp-i').value;var b=document.getElementById('dp-b').value;var sl=document.getElementById('dp-slide').checked?1:0;var ca=document.getElementById('dp-cal').checked?1:0;var bg=document.getElementById('dp-bg').checked?1:0;fetch('/SET_DISPLAY?INTERVAL='+i+'&BRIGHT='+b+'&SLIDE='+sl+'&CAL='+ca+'&BG='+bg).then(function(r){toast(r.ok?'Display gespeichert':'Fehler',r.ok);}).catch(function(){toast('Fehler',false);});}
+function updSeg(){var fg=document.getElementById('cl-fg').value;var bg=document.getElementById('cl-bg').value;document.getElementById('seg-bg').setAttribute('fill',bg);document.querySelectorAll('.seg-fg').forEach(function(s){s.setAttribute('fill',fg);});}
+function saveClk(){var fh=document.getElementById('cl-fg').value;var bh=document.getElementById('cl-bg').value;var fr=parseInt(fh.slice(1,3),16),fg=parseInt(fh.slice(3,5),16),fb=parseInt(fh.slice(5,7),16);var br=parseInt(bh.slice(1,3),16),bg=parseInt(bh.slice(3,5),16),bb=parseInt(bh.slice(5,7),16);fetch('/SET_DISPLAY?CFR='+fr+'&CFG='+fg+'&CFB='+fb+'&CBR='+br+'&CBG='+bg+'&CBB='+bb).then(function(r){toast(r.ok?'Farben gespeichert':'Fehler',r.ok);}).catch(function(){toast('Fehler',false);});}
 </script>
 </body>
 </html>

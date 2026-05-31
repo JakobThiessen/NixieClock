@@ -77,6 +77,35 @@ clockConfiguration clockConfig;
 
 SemaphoreHandle_t xSpiMutex = NULL;  // shared SPI bus mutex
 
+// SD directory cache – populated at boot, served by WebServer without SPI access
+SdCacheEntry sdFileCache[SD_CACHE_MAX];
+int sdFileCacheCount = 0;
+volatile bool bootInitDone = false;
+
+// Recursive SD scan; call once after sdCard.begin() succeeds, before display init
+void scanSdCache(const char* dirPath) {
+    FsFile dir = sdCard.open(dirPath);
+    if (!dir || !dir.isDirectory()) { dir.close(); return; }
+    FsFile entry;
+    char name[64];
+    while (entry.openNext(&dir, O_RDONLY)) {
+        entry.getName(name, sizeof(name));
+        if (name[0] != '.' && sdFileCacheCount < SD_CACHE_MAX) {
+            SdCacheEntry& e = sdFileCache[sdFileCacheCount++];
+            // Build full path
+            strlcpy(e.path, dirPath, sizeof(e.path));
+            if (e.path[strlen(e.path)-1] != '/') strlcat(e.path, "/", sizeof(e.path));
+            strlcat(e.path, name, sizeof(e.path));
+            strlcpy(e.name, name, sizeof(e.name));
+            e.isDir = entry.isDirectory();
+            e.size  = e.isDir ? 0 : (uint32_t)entry.fileSize();
+            if (e.isDir) scanSdCache(e.path);  // recurse
+        }
+        entry.close();
+    }
+    dir.close();
+}
+
 TaskHandle_t taskRGB_LED;
 TaskHandle_t task_Uart;
 TaskHandle_t task_Display;
@@ -93,10 +122,11 @@ void tCodeDisplay(void *pvParameters);
 
 void handle_cs(uint8_t spiDeviceNumber, uint8_t level)
 {
-    // Take SPI mutex when starting a transaction (CS→LOW),
-    // release it when ending (CS→HIGH). Timeout: 200ms.
+    // Take SPI mutex when starting a transaction (CS→LOW).
+    // portMAX_DELAY: display task MUST wait until SD/WebServer releases bus.
+    // Ignoring the return value with a short timeout was the root cause of SPI corruption.
     if (level == LOW && xSpiMutex) {
-        xSemaphoreTakeRecursive(xSpiMutex, pdMS_TO_TICKS(200));
+        xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
     }
 
     switch(spiDeviceNumber)
@@ -427,6 +457,28 @@ void drawCalendar(int currentDay, int month, int year, uint8_t shortMonthWithYea
     // Skip the days before the first day of the month
     day = (firstDayOfWeek - 1) * -1;
 
+    // Berechne Gesamtzeilenanzahl und Zeile des aktuellen Tages
+    int totalRows = 0;
+    int currentDayRow = 0;
+    {
+        int tempDay = (firstDayOfWeek - 1) * -1;
+        int row = 0;
+        while (tempDay <= days_of_month) {
+            row++;
+            for (int i = 0; i < 7; i++) {
+                if (tempDay == currentDay) currentDayRow = row;
+                tempDay++;
+            }
+            totalRows = row;
+        }
+    }
+
+    // Wenn 6 Zeilen nötig und currentDay in Zeile 6: erste Zeile überspringen
+    int skipRows = 0;
+    if (totalRows > 5 && currentDayRow > 5) {
+        skipRows = totalRows - 5;
+    }
+
     pos_x = startPosX;
     for(int i = 0; i < firstDayOfWeek; i++)
     {
@@ -443,8 +495,16 @@ void drawCalendar(int currentDay, int month, int year, uint8_t shortMonthWithYea
         pos_x = pos_x + w + offset;
     }
 
+    int rowCount = 0;
     while (day <= days_of_month)
     {
+        rowCount++;
+        if (rowCount <= skipRows) {
+            // Zeile überspringen: nur day-Zähler weitersetzen
+            day += 7;
+            pos_x = startPosX;  // nach Skip beginnt nächste Zeile bei Spalte 0
+            continue;
+        }
         for (int i = 0; i < 7; i++)
         {
             if ((day >= 1) && (day <= days_of_month))
@@ -462,16 +522,23 @@ void drawCalendar(int currentDay, int month, int year, uint8_t shortMonthWithYea
                 }
                 pos_x = pos_x + w + offset;
 
-                // highlight today with filled red circle
+                // highlight today with filled rectangle
                 if (day == currentDay)
                 {
                     int cur_x = tft.getCursorX();
                     int cur_y = tft.getCursorY();
 
-                    tft.fillRoundRect(cur_x -2, cur_y - 2, w+4, h+4, 2, colorMarker);
+                    // Breite der Tageszahl berechnen
+                    char dayStr[4];
+                    snprintf(dayStr, sizeof(dayStr), "%d", day);
+                    int16_t tx, ty;
+                    uint16_t tw, th;
+                    tft.getTextBounds(dayStr, cur_x, cur_y, &tx, &ty, &tw, &th);
+
+                    tft.fillRect(cur_x - 1, cur_y - 1, tw + 2, th + 2, colorMarker);
+                    tft.setCursor(cur_x, cur_y);
                     tft.setTextColor(colorFont);
-                    if (day > 0)
-                        tft.print(day);
+                    tft.print(day);
                 }
                 else
                 {
@@ -597,18 +664,27 @@ int getLocTime(int *day, int *month, int *year, uint8_t *hour, uint8_t *min, uin
     return 0;
 }
 
-volatile static uint8_t old_hour = 0;
-volatile static uint8_t old_min = 0;
+volatile static uint8_t old_hour = 255;  // ungültiger Wert → erzwingt erstes Zeichnen
+volatile static uint8_t old_min = 255;
 volatile static uint8_t old_sec = 0;
+volatile static bool forceRedraw = true;  // erster Aufruf nach Boot
 
 void drawTime(uint8_t hour, uint8_t min, uint8_t sec, int timestatus)
 {
+    // Uhrzeitfarben aus Konfiguration (RGB888 → RGB565)
+    uint16_t clockFg = ((uint16_t)(systemConfig.clockFgR & 0xF8) << 8) |
+                       ((uint16_t)(systemConfig.clockFgG & 0xFC) << 3) |
+                       (systemConfig.clockFgB >> 3);
+    uint16_t clockBg = ((uint16_t)(systemConfig.clockBgR & 0xF8) << 8) |
+                       ((uint16_t)(systemConfig.clockBgG & 0xFC) << 3) |
+                       (systemConfig.clockBgB >> 3);
+
     uint8_t digit_1;
     uint8_t digit_2;
     uint8_t digit_3;
     uint8_t digit_4;
-    bool update_hour = true;
-    bool update_min = true;
+    bool update_hour = (hour != old_hour) || forceRedraw;
+    bool update_min  = (min != old_min)   || forceRedraw;
     old_sec = sec;
 
     if (timestatus == 0)
@@ -621,6 +697,7 @@ void drawTime(uint8_t hour, uint8_t min, uint8_t sec, int timestatus)
 
         if (update_hour)
         {
+            old_hour = hour;
             /*
             handle_cs(1, LOW);
             tft_1.fillScreen(ST77XX_BLACK);
@@ -638,11 +715,12 @@ void drawTime(uint8_t hour, uint8_t min, uint8_t sec, int timestatus)
             */
             tft_1.fillScreen(ST77XX_BLACK);
             tft_2.fillScreen(ST77XX_BLACK);
-            draw7Number(digit_1, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_1);
-            draw7Number(digit_2, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_2);
+            draw7Number(digit_1, 20, 20, 10, clockFg, clockBg, 1, &tft_1);
+            draw7Number(digit_2, 20, 20, 10, clockFg, clockBg, 1, &tft_2);
         }
         if (update_min)
         {
+            old_min = min;
             /*
             handle_cs(3, LOW);
             tft_3.fillScreen(ST77XX_BLACK);
@@ -662,8 +740,8 @@ void drawTime(uint8_t hour, uint8_t min, uint8_t sec, int timestatus)
             */
             tft_3.fillScreen(ST77XX_BLACK);
             tft_4.fillScreen(ST77XX_BLACK);
-            draw7Number(digit_3, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_3);
-            draw7Number(digit_4, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_4);
+            draw7Number(digit_3, 20, 20, 10, clockFg, clockBg, 1, &tft_3);
+            draw7Number(digit_4, 20, 20, 10, clockFg, clockBg, 1, &tft_4);
         }
     }
     else
@@ -701,14 +779,15 @@ void drawTime(uint8_t hour, uint8_t min, uint8_t sec, int timestatus)
         tft_2.fillScreen(ST77XX_BLACK);
         tft_3.fillScreen(ST77XX_BLACK);
         tft_4.fillScreen(ST77XX_BLACK);
-        draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_1);
-        draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_2);
-        draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_3);
-        draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_4);
+        draw7Number(0, 20, 20, 10, clockFg, clockBg, 1, &tft_1);
+        draw7Number(0, 20, 20, 10, clockFg, clockBg, 1, &tft_2);
+        draw7Number(0, 20, 20, 10, clockFg, clockBg, 1, &tft_3);
+        draw7Number(0, 20, 20, 10, clockFg, clockBg, 1, &tft_4);
     }
 
     update_hour = false;
     update_min = false;
+    forceRedraw = false;
 }
 
 void drawAdventsKerzen()
@@ -793,27 +872,34 @@ void setup(void)
     pinMode(SD_CS, OUTPUT);
     digitalWrite(SD_CS, HIGH);
 
-    // SD-Init VOR DISPLAY_POW_EN: kein Display unter Strom, Bus komplett sauber
-    Serial.print("--> SD Card init time: "); Serial.println( millis());
+    // SD-Init VOR Display-Init: SPI-Bus ist sauber, kein anderes Device aktiv.
+    // WICHTIG: SPI.begin() ist ein NO-OP wenn bereits initialisiert (_spi != NULL).
+    // Die internen SPI.begin()-Aufrufe der Adafruit Display-Library ändern NICHTS am Bus.
+    // → SD bleibt initialisiert und nutzbar, auch nach 5× Display-Init!
+    Serial.print("--> SPI.begin() time: "); Serial.println( millis());
     SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI);
-    for (int attempt = 1; attempt <= 3 && !systemConfig.sdCardDetected; attempt++)
-    {
-        Serial.printf("SD init Versuch %d/3...\n\r", attempt);
+
+    Serial.print("--> SD Card init time: "); Serial.println(millis());
+    for (int attempt = 1; attempt <= 3 && !systemConfig.sdCardDetected; attempt++) {
+        Serial.printf("SD Versuch %d/3... ", attempt);
         systemConfig.sdCardDetected = sdCard.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(1), &SPI));
-        if (!systemConfig.sdCardDetected)
-        {
-            Serial.printf("  -> Fehler: errorCode=0x%02X  errorData=0x%02X\n\r",
-                          (int)sdCard.sdErrorCode(),
-                          (int)sdCard.sdErrorData());
+        if (!systemConfig.sdCardDetected) {
+            Serial.printf("err=0x%02X data=0x%02X\n", (int)sdCard.sdErrorCode(), (int)sdCard.sdErrorData());
             delay(200);
+        } else {
+            Serial.println("OK");
         }
     }
-    Serial.printf("SD Card init: %s\n\r", systemConfig.sdCardDetected ? "OK" : "FEHLGESCHLAGEN");
-    if (systemConfig.sdCardDetected)
-    {
+    if (systemConfig.sdCardDetected) {
         uint32_t cardSizeMB = (uint32_t)(sdCard.card()->sectorCount() / 2048UL);
-        Serial.printf("SD Card Groesse: %uMB\n\r", cardSizeMB);
+        Serial.printf("SD Groesse: %uMB\n", cardSizeMB);
+        sdFileCacheCount = 0;
+        scanSdCache("/");
+        Serial.printf("SD Cache: %d Eintraege\n", sdFileCacheCount);
     }
+    // SD bleibt initialisiert! Kein sdCard.end()!
+    // SD_CS explizit HIGH setzen → Karte ignoriert allen nachfolgenden Bus-Verkehr.
+    digitalWrite(SD_CS, HIGH);
 
     digitalWrite(DISPLAY_POW_EN, HIGH);
     Serial.print("--> Init DIO and DispReset time: "); Serial.println( millis());
@@ -908,6 +994,8 @@ void setup(void)
 
     Serial.print("--> Init TFT(5) time: "); Serial.println( millis());
 
+    // SD bleibt ab hier initialisiert und nutzbar (SHARED_SPI + Mutex).
+
     // Initialize systemConfig defaults (Preferences loaded later in WebServer task)
     strncpy(systemConfig.ntpServer, "de.pool.ntp.org", sizeof(systemConfig.ntpServer) - 1);
     systemConfig.ntpServer[sizeof(systemConfig.ntpServer) - 1] = '\0';
@@ -918,6 +1006,12 @@ void setup(void)
     systemConfig.calendarEnabled    = true;
     systemConfig.backgroundEnabled  = false;
     systemConfig.bootAnimMode       = 0;  // default: keine Animation
+    systemConfig.clockFgR           = 248; // Magenta
+    systemConfig.clockFgG           = 0;
+    systemConfig.clockFgB           = 248;
+    systemConfig.clockBgR           = 24;  // Dunkelgrau (0x18c3)
+    systemConfig.clockBgG           = 24;
+    systemConfig.clockBgB           = 24;
 
     // RGB defaults – overwritten by Preferences at boot if keys exist
     rgbConfig.rgbMode       = 0;      // Aus
@@ -986,14 +1080,16 @@ void setup(void)
         &task_Uart      /* Task handle to keep track of created task */
     );
 
-    xTaskCreate(
+    BaseType_t dispResult = xTaskCreate(
         tCodeDisplay,   /* Task function. */
         "TaskDisp",     /* name of task. */
-        80000,          /* Stack size of task */
+        40000,          /* Stack size of task */
         NULL,           /* parameter of the task */
         1,              /* priority of the task */
         &task_Display   /* Task handle to keep track of created task */
     );
+    Serial.printf("xTaskCreate Display: %s  free heap: %u\n",
+                  dispResult == pdPASS ? "OK" : "FEHLGESCHLAGEN", ESP.getFreeHeap());
 
     Serial.print("Stop Setup() millis(): "); Serial.println( millis());
 }
@@ -1020,12 +1116,12 @@ int8_t state_tft_info = 0;
 
 void tCodeDisplay(void *pvParameters)
 {
-    Serial.printf("Task Display running on core %02d", xPortGetCoreID());
+    Serial.printf("Task Display running on core %02d\n", xPortGetCoreID());
+    Serial.printf("[DISP] Stack HWM: %u bytes free\n", uxTaskGetStackHighWaterMark(NULL) * 4);
     int day, month, year;
     uint8_t hour, min, sec;
     day = 1; month = 1; year = 124;
     state_tft_info = 0;
-    bool calenderIsDrawn = false;
 
     // Boot-Animation: Modus aus NVS lesen (vor WebServer-Task, daher eigener Prefs-Block)
     {
@@ -1036,14 +1132,11 @@ void tCodeDisplay(void *pvParameters)
         animPrefs.end();
     }
     if (systemConfig.bootAnimMode != 0) {
-        runBootAnimation(systemConfig.bootAnimMode, 10000);
+        runBootAnimation(systemConfig.bootAnimMode, 60000);  // max 60s, endet früher wenn bootInitDone (min 10s)
     }
 
-    // Boot-Statusanzeige: SD-Karte und WLAN auf dem 1.8" TFT (tft) zeigen
-    xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
-    drawSystem();
-    xSemaphoreGiveRecursive(xSpiMutex);
-    vTaskDelay(pdMS_TO_TICKS(3000));
+    // Nach Animation sofort Uhrzeit + Kalender anzeigen (kein drawSystem/Schwarzbild)
+    int old_day = -1;  // erzwingt erstes Zeichnen
 
     for (;;)
     {
@@ -1051,42 +1144,15 @@ void tCodeDisplay(void *pvParameters)
 
         xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
         drawTime(hour, min, sec, timestatus);
-        if (timestatus == 0 && systemConfig.calendarEnabled)
+        if (timestatus == 0 && systemConfig.calendarEnabled && day != old_day)
         {
             drawCalendar(day, month + 1, year + 1900, 1);
-            calenderIsDrawn = true;
+            old_day = day;
         }
         xSemaphoreGiveRecursive(xSpiMutex);
 
-        vTaskDelay(pdMS_TO_TICKS(1000));  // SD-Zugriff vom WebServer möglich
-
-        if (day == 19) {
-            xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
-            drawBirthday(0);
-            xSemaphoreGiveRecursive(xSpiMutex);
-        }
-
-        if (systemConfig.slideshowEnabled) {
-            xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
-            drawAdventsKerzen();
-            xSemaphoreGiveRecursive(xSpiMutex);
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(1000));  // SD-Zugriff vom WebServer möglich
-
-        if (day == 19) {
-            xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
-            drawBirthday(1);
-            xSemaphoreGiveRecursive(xSpiMutex);
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(2000));  // SD-Zugriff vom WebServer möglich
-
-        xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
-        drawSystem();
-        xSemaphoreGiveRecursive(xSpiMutex);
-
-        vTaskDelay(pdMS_TO_TICKS(2000));  // SD-Zugriff vom WebServer möglich
+        // Warte bis nächste Minute sich ändert
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
     
 }

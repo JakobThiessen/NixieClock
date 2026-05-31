@@ -9,9 +9,12 @@
 #include <Preferences.h>
 #include <Esp.h>
 #include <SDFat.h>
+#include <SPI.h>
 #include "WebPage.h"
 #include "credentials.h"
 
+extern SdCacheEntry sdFileCache[];
+extern int sdFileCacheCount;
 extern SdFs sdCard;
 extern SemaphoreHandle_t xSpiMutex;
 
@@ -95,6 +98,12 @@ void tCodeServerTask(void *pvParameters)
     if (prefs.isKey("dp_cal"))   systemConfig.calendarEnabled    = prefs.getUChar("dp_cal")   != 0;
     if (prefs.isKey("dp_bg"))    systemConfig.backgroundEnabled  = prefs.getUChar("dp_bg")    != 0;
     if (prefs.isKey("anim_m"))   systemConfig.bootAnimMode       = prefs.getUChar("anim_m");
+    if (prefs.isKey("cl_fg_r"))  systemConfig.clockFgR           = prefs.getUChar("cl_fg_r");
+    if (prefs.isKey("cl_fg_g"))  systemConfig.clockFgG           = prefs.getUChar("cl_fg_g");
+    if (prefs.isKey("cl_fg_b"))  systemConfig.clockFgB           = prefs.getUChar("cl_fg_b");
+    if (prefs.isKey("cl_bg_r"))  systemConfig.clockBgR           = prefs.getUChar("cl_bg_r");
+    if (prefs.isKey("cl_bg_g"))  systemConfig.clockBgG           = prefs.getUChar("cl_bg_g");
+    if (prefs.isKey("cl_bg_b"))  systemConfig.clockBgB           = prefs.getUChar("cl_bg_b");
     prefs.end();
     Serial.println("--> Prefs loaded");
 
@@ -106,6 +115,10 @@ void tCodeServerTask(void *pvParameters)
     // Apply NTP config after WiFi is connected (needs DNS)
     applyNTPConfig();
     Serial.println("--> NTP configured");
+
+    // Signalisiere anderen Tasks, dass Initialisierung abgeschlossen ist
+    bootInitDone = true;
+    Serial.println("--> bootInitDone = true");
 
     server.on("/", SendWebsite);
     server.on("/xml", SendXML);
@@ -210,12 +223,22 @@ void SendXML()
         "<CPU>%u</CPU>"
         "<CHIP>%s</CHIP>"
         "<RGBM>%u</RGBM>"
+        "<RGBR>%u</RGBR>"
+        "<RGBG>%u</RGBG>"
+        "<RGBB>%u</RGBB>"
+        "<RGBBR>%u</RGBBR>"
         "<DPINT>%u</DPINT>"
         "<DPBR>%u</DPBR>"
         "<SLIDE>%u</SLIDE>"
         "<CAL>%u</CAL>"
         "<BG>%u</BG>"
         "<ANIMM>%u</ANIMM>"
+        "<CLFR>%u</CLFR>"
+        "<CLFG>%u</CLFG>"
+        "<CLFB>%u</CLFB>"
+        "<CLBR>%u</CLBR>"
+        "<CLBG>%u</CLBG>"
+        "<CLBB>%u</CLBB>"
         "</Data>",
         (unsigned)ESP.getFreeHeap(),
         WiFi.RSSI(),
@@ -229,12 +252,22 @@ void SendXML()
         (unsigned)ESP.getCpuFreqMHz(),
         ESP.getChipModel(),
         (unsigned)rgbConfig.rgbMode,
+        (unsigned)rgbConfig.rgbR,
+        (unsigned)rgbConfig.rgbG,
+        (unsigned)rgbConfig.rgbB,
+        (unsigned)rgbConfig.rgbBrigthness,
         (unsigned)systemConfig.displayIntervalSec,
         (unsigned)systemConfig.displayBrightness,
         (unsigned)systemConfig.slideshowEnabled,
         (unsigned)systemConfig.calendarEnabled,
         (unsigned)systemConfig.backgroundEnabled,
-        (unsigned)systemConfig.bootAnimMode
+        (unsigned)systemConfig.bootAnimMode,
+        (unsigned)systemConfig.clockFgR,
+        (unsigned)systemConfig.clockFgG,
+        (unsigned)systemConfig.clockFgB,
+        (unsigned)systemConfig.clockBgR,
+        (unsigned)systemConfig.clockBgG,
+        (unsigned)systemConfig.clockBgB
     );
     server.send(200, "text/xml", XML);
 }
@@ -281,17 +314,29 @@ void HandleSetRGB()
 
 void HandleSetDisplay()
 {
-    systemConfig.displayIntervalSec = (uint16_t)server.arg("INTERVAL").toInt();
-    systemConfig.displayBrightness  = (uint16_t)server.arg("BRIGHT").toInt();
-    if (server.hasArg("SLIDE")) systemConfig.slideshowEnabled  = server.arg("SLIDE").toInt() != 0;
-    if (server.hasArg("CAL"))   systemConfig.calendarEnabled   = server.arg("CAL").toInt()   != 0;
-    if (server.hasArg("BG"))    systemConfig.backgroundEnabled = server.arg("BG").toInt()    != 0;
+    if (server.hasArg("INTERVAL")) systemConfig.displayIntervalSec = (uint16_t)server.arg("INTERVAL").toInt();
+    if (server.hasArg("BRIGHT"))   systemConfig.displayBrightness  = (uint16_t)server.arg("BRIGHT").toInt();
+    if (server.hasArg("SLIDE"))    systemConfig.slideshowEnabled   = server.arg("SLIDE").toInt() != 0;
+    if (server.hasArg("CAL"))      systemConfig.calendarEnabled    = server.arg("CAL").toInt()   != 0;
+    if (server.hasArg("BG"))       systemConfig.backgroundEnabled  = server.arg("BG").toInt()    != 0;
+    if (server.hasArg("CFR"))      systemConfig.clockFgR           = (uint8_t)server.arg("CFR").toInt();
+    if (server.hasArg("CFG"))      systemConfig.clockFgG           = (uint8_t)server.arg("CFG").toInt();
+    if (server.hasArg("CFB"))      systemConfig.clockFgB           = (uint8_t)server.arg("CFB").toInt();
+    if (server.hasArg("CBR"))      systemConfig.clockBgR           = (uint8_t)server.arg("CBR").toInt();
+    if (server.hasArg("CBG"))      systemConfig.clockBgG           = (uint8_t)server.arg("CBG").toInt();
+    if (server.hasArg("CBB"))      systemConfig.clockBgB           = (uint8_t)server.arg("CBB").toInt();
     prefs.begin("nixie", false);
     prefs.putUShort("dp_int",  systemConfig.displayIntervalSec);
     prefs.putUShort("dp_br",   systemConfig.displayBrightness);
     prefs.putUChar("dp_slide", systemConfig.slideshowEnabled  ? 1 : 0);
     prefs.putUChar("dp_cal",   systemConfig.calendarEnabled   ? 1 : 0);
     prefs.putUChar("dp_bg",    systemConfig.backgroundEnabled ? 1 : 0);
+    prefs.putUChar("cl_fg_r",  systemConfig.clockFgR);
+    prefs.putUChar("cl_fg_g",  systemConfig.clockFgG);
+    prefs.putUChar("cl_fg_b",  systemConfig.clockFgB);
+    prefs.putUChar("cl_bg_r",  systemConfig.clockBgR);
+    prefs.putUChar("cl_bg_g",  systemConfig.clockBgG);
+    prefs.putUChar("cl_bg_b",  systemConfig.clockBgB);
     prefs.end();
     server.send(200, "text/plain", "OK");
 }
@@ -312,66 +357,47 @@ void HandleSdList()
 {
     String path = server.hasArg("path") ? server.arg("path") : "/";
     if (path.length() == 0) path = "/";
-    Serial.printf("[SD_LIST] path='%s' sdDetected=%d\n", path.c_str(), (int)systemConfig.sdCardDetected);
+    // Normalize: remove trailing slash except root
+    while (path.length() > 1 && path.endsWith("/")) path.remove(path.length() - 1);
 
-    if (!systemConfig.sdCardDetected) {
+    Serial.printf("[SD_LIST] path='%s' cacheCount=%d\n", path.c_str(), sdFileCacheCount);
+
+    if (!systemConfig.sdCardDetected || sdFileCacheCount == 0) {
         server.send(503, "application/json", "[]");
         return;
     }
 
-    FsFile dir;
-    if (xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY) != pdTRUE) {
-        server.send(503, "application/json", "[]");
-        return;
-    }
-
-    // Diagnose: ls() direkt über SdFat
-    Serial.printf("[SD_LIST] sdCard.ls():\n");
-    sdCard.ls(path.c_str(), LS_DATE | LS_SIZE);
-
-    bool opened = dir.open(&sdCard, path.c_str(), O_RDONLY);
-    Serial.printf("[SD_LIST] dir.open=%d isDir=%d\n", (int)opened, opened ? (int)dir.isDirectory() : -1);
-
-    if (!opened || !dir.isDirectory()) {
-        if (dir) dir.close();
-        xSemaphoreGiveRecursive(xSpiMutex);
-        server.send(404, "application/json", "[]");
-        return;
-    }
-    dir.rewindDirectory();
-
+    // Serve listing from RAM cache – no SPI access required
     String json = "[";
     bool first = true;
-    FsFile entry;
-    char name[256];
     int count = 0;
 
-    while (entry.openNext(&dir, O_RDONLY)) {
-        entry.getName(name, sizeof(name));
-        Serial.printf("[SD_LIST] entry: '%s' dir=%d\n", name, (int)entry.isDirectory());
-        if (name[0] == '.') { entry.close(); continue; }
+    for (int i = 0; i < sdFileCacheCount; i++) {
+        const SdCacheEntry& e = sdFileCache[i];
+
+        // Determine parent path of this entry
+        const char* p = strrchr(e.path, '/');
+        String parent = (p && p != e.path) ? String(e.path).substring(0, p - e.path) : "/";
+
+        if (parent != path) continue;
 
         if (!first) json += ',';
         first = false;
         count++;
 
         json += "{\"name\":\"";
-        escapeJson(name, json);
+        escapeJson(e.name, json);
         json += "\",\"type\":\"";
-        json += entry.isDirectory() ? "dir" : "file";
+        json += e.isDir ? "dir" : "file";
         json += '"';
-        if (!entry.isDirectory()) {
+        if (!e.isDir) {
             json += ",\"size\":";
-            json += String((uint32_t)entry.fileSize());
+            json += String(e.size);
         }
         json += '}';
-        entry.close();
     }
-    dir.close();
-    xSemaphoreGiveRecursive(xSpiMutex);
-
     json += ']';
-    Serial.printf("[SD_LIST] found %d entries, json len=%d\n", count, json.length());
+    Serial.printf("[SD_LIST] found %d entries from cache\n", count);
     server.sendHeader("Cache-Control", "no-store");
     server.send(200, "application/json", json);
 }
@@ -384,6 +410,7 @@ void HandleSdFile()
     }
 
     String path = server.arg("path");
+    Serial.printf("[SD_FILE] %s\n", path.c_str());
 
     String ct = "application/octet-stream";
     String lp = path; lp.toLowerCase();
@@ -393,11 +420,72 @@ void HandleSdFile()
     else if (lp.endsWith(".gif"))  ct = "image/gif";
     else if (lp.endsWith(".txt"))  ct = "text/plain";
 
-    FsFile f;
-    xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
-    bool opened = f.open(&sdCard, path.c_str(), O_RDONLY);
+    // sdCard was initialized before display-init and kept valid via SHARED_SPI.
+    // Protect with mutex so display task doesn't use SPI concurrently.
+    if (xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY) != pdTRUE) {
+        server.send(503, "text/plain", "Busy");
+        return;
+    }
 
-    if (!opened || f.isDirectory()) {
+    // Diagnostic: check if card is still reachable at raw level
+    Serial.printf("[SD_FILE] card type=%d sectors=%lu\n",
+                  (int)sdCard.card()->type(), (unsigned long)sdCard.card()->sectorCount());
+
+    // Deselect ALL display CS pins explicitly before SD access
+    digitalWrite(TFT_CS_0, HIGH);
+    digitalWrite(TFT_CS_1, HIGH);
+    digitalWrite(TFT_CS_2, HIGH);
+    digitalWrite(TFT_CS_3, HIGH);
+    digitalWrite(TFT_CS_4, HIGH);
+
+    // Send clock pulses with SD_CS HIGH to sync card
+    digitalWrite(SD_CS, HIGH);
+    SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+    for (int i = 0; i < 10; i++) SPI.transfer(0xFF);
+    SPI.endTransaction();
+
+    FsFile f = sdCard.open(path.c_str(), O_RDONLY);
+
+    // If open fails, aggressive reinit: full SPI reset + slow clock + long delays
+    if (!f) {
+        Serial.println("[SD_FILE] open failed, aggressive reinit...");
+
+        // 1) Kill SdFat state completely
+        sdCard.end();  // calls SPI.end() internally
+
+        // 2) Disconnect all SPI pins from peripheral, set as GPIO
+        pinMode(TFT_CLK, OUTPUT);
+        pinMode(TFT_MOSI, OUTPUT);
+        pinMode(TFT_MISO, INPUT_PULLUP);
+        pinMode(SD_CS, OUTPUT);
+        digitalWrite(SD_CS, HIGH);
+        digitalWrite(TFT_CLK, LOW);
+        digitalWrite(TFT_MOSI, HIGH);
+        delay(100);  // let card see stable lines
+
+        // 3) Re-init SPI peripheral
+        SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI);
+
+        // 4) Card power-on sequence: >74 clock pulses at <=400kHz with CS HIGH
+        digitalWrite(SD_CS, HIGH);
+        SPI.beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE0));
+        for (int i = 0; i < 20; i++) SPI.transfer(0xFF);  // 160 clocks
+        SPI.endTransaction();
+        delay(50);
+
+        // 5) Re-init SD card
+        if (sdCard.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(1), &SPI))) {
+            f = sdCard.open(path.c_str(), O_RDONLY);
+            Serial.printf("[SD_FILE] retry open=%d\n", (int)(bool)f);
+        } else {
+            Serial.printf("[SD_FILE] reinit failed err=0x%02X data=0x%02X\n",
+                          (int)sdCard.sdErrorCode(), (int)sdCard.sdErrorData());
+        }
+    }
+
+    Serial.printf("[SD_FILE] open=%d\n", (int)(bool)f);
+
+    if (!f || f.isDirectory()) {
         if (f) f.close();
         xSemaphoreGiveRecursive(xSpiMutex);
         server.send(404, "text/plain", "Not found");
@@ -405,13 +493,10 @@ void HandleSdFile()
     }
 
     uint32_t fileSize = (uint32_t)f.fileSize();
-
-    // Read entire file into a heap buffer while holding the SPI mutex,
-    // then release mutex and stream over WiFi – avoids interleaved SPI+WiFi.
     uint8_t* fileData = (uint8_t*)malloc(fileSize);
     if (!fileData) {
         f.close();
-        xSemaphoreGive(xSpiMutex);
+        xSemaphoreGiveRecursive(xSpiMutex);
         server.send(503, "text/plain", "Out of memory");
         return;
     }
@@ -419,7 +504,8 @@ void HandleSdFile()
     f.close();
     xSemaphoreGiveRecursive(xSpiMutex);
 
-    server.sendHeader("Cache-Control", "no-store");
+    Serial.printf("[SD_FILE] sending %u bytes\n", fileSize);
+    server.sendHeader("Cache-Control", "max-age=60");
     server.setContentLength(fileSize);
     server.send(200, ct, "");
 
@@ -427,7 +513,7 @@ void HandleSdFile()
     uint32_t sent = 0;
     while (sent < fileSize && client.connected()) {
         uint32_t chunk = fileSize - sent;
-        if (chunk > 1024) chunk = 1024;
+        if (chunk > 1460) chunk = 1460;  // TCP MSS
         client.write(fileData + sent, chunk);
         sent += chunk;
     }

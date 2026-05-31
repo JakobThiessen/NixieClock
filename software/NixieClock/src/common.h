@@ -6,7 +6,6 @@
 #include "freertos/FreeRTOSConfig.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
-#include "freertos/semphr.h"
 
 #include <time.h>
 
@@ -47,12 +46,22 @@ extern "C" {
 #define ADC_0_PIN       36  // ADC1
 #define ADC_3_PIN       39  // ADC1
 
-#define SPI_FREQUENCY 10000000U
+#define SPI_FREQUENCY 16000000U
 
-#define FW_VERSION "3.0.0"
+#define FW_VERSION "4.2.1"
 #define FW_BUILD_DATE __DATE__
 #define FW_BUILD_TIME __TIME__
 
+#define SD_CACHE_MAX 128
+
+typedef struct {
+    char path[128];
+    char name[64];
+    bool isDir;
+    uint32_t size;
+} SdCacheEntry;
+
+extern SemaphoreHandle_t xSpiMutex;
 extern QueueHandle_t xQueue_RGB_Config;
 extern QueueHandle_t xQueue_WiFi;
 
@@ -76,7 +85,13 @@ typedef struct{
     bool slideshowEnabled;
     bool calendarEnabled;
     bool backgroundEnabled;
-    uint8_t bootAnimMode;   // 0=keine, 1=Matrix, 2=NixieSlot, 3=Farbwellen
+    uint8_t bootAnimMode;
+    uint8_t clockFgR;
+    uint8_t clockFgG;
+    uint8_t clockFgB;
+    uint8_t clockBgR;
+    uint8_t clockBgG;
+    uint8_t clockBgB;
 }systemConfigStruct;
 
 
@@ -113,10 +128,10 @@ typedef struct{
     struct calendarPublicHolidays;
 }clockConfiguration;
 
+extern volatile bool bootInitDone;
 extern rgbConfigStruct rgbConfig;
 extern systemConfigStruct systemConfig;
 extern clockConfiguration clockConfig;
-extern SemaphoreHandle_t xSpiMutex;  // shared SPI bus mutex
 
 #ifdef __cplusplus
 }

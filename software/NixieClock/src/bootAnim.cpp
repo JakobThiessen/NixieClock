@@ -28,6 +28,7 @@
 extern Adafruit_ST7735  tft;
 extern Adafruit_ST7789  tft_1, tft_2, tft_3, tft_4;
 extern systemConfigStruct systemConfig;
+extern volatile bool bootInitDone;
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────────────
 
@@ -107,7 +108,7 @@ static void animMatrix(uint32_t durationMs)
         headSml[c] = -(int16_t)random(0, SML_ROWS + 4);
 
     uint32_t start = millis();
-    while (millis() - start < durationMs) {
+    while (millis() - start < durationMs && (millis() - start < 10000 || !bootInitDone)) {
         // --- Große Displays ---
         for (int d = 0; d < 4; d++) {
             Adafruit_ST7789* t = bigDisp(d);
@@ -206,7 +207,7 @@ static void animSlot(uint32_t durationMs)
     tft.drawFastHLine(8, 52, 144, c565(40, 60, 80));
     dispCS(0, HIGH);
 
-    while (millis() - start < durationMs) {
+    while (millis() - start < durationMs && (millis() - start < 10000 || !bootInitDone)) {
         uint32_t now     = millis();
         uint32_t elapsed = now - start;
 
@@ -278,7 +279,7 @@ static void animColorWave(uint32_t durationMs)
     }
     dispCS(0, LOW); tft.fillScreen(0x0000); dispCS(0, HIGH);
 
-    while (millis() - start < durationMs) {
+    while (millis() - start < durationMs && (millis() - start < 10000 || !bootInitDone)) {
         // Große Displays
         for (int d = 0; d < 4; d++) {
             Adafruit_ST7789* t = bigDisp(d);

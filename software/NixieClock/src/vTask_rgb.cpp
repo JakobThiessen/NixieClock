@@ -54,9 +54,50 @@ uint32_t Wheel(byte WheelPos)
 void tCodeRGB(void *pvParameters)
 {
     strip.begin();
-    strip.show();            // all off
-    strip.setBrightness(10);
+    strip.show();
+    strip.setBrightness(0);
 
+    // ── Boot-Animation: sanftes hellblaues Pulsieren mit Rotation ──
+    {
+        float phase = 0.0f;
+        uint8_t bright = 0;
+        uint16_t rotation = 0;
+
+        while (!bootInitDone) {
+            // Langsam hochfahren
+            if (bright < 60) bright++;
+
+            // Hellblau pulsiert
+            float pulse = (sinf(phase) + 1.0f) * 0.5f;
+            phase += 0.04f;
+            if (phase > 6.2832f) phase -= 6.2832f;
+
+            for (int i = 0; i < LED_COUNT; i++) {
+                float pos = (float)((i * 256 / LED_COUNT + rotation) % 256) / 255.0f;
+                float wave = (sinf(pos * 6.2832f) + 1.0f) * 0.5f;
+                float intensity = wave * (0.5f + 0.5f * pulse);
+                uint8_t r = (uint8_t)(intensity * 30);
+                uint8_t g = (uint8_t)(intensity * 80);
+                uint8_t b = (uint8_t)(intensity * 160);
+                strip.setPixelColor(i, strip.Color(r, g, b));
+            }
+            strip.setBrightness(bright);
+            strip.show();
+            rotation += 2;
+            vTaskDelay(pdMS_TO_TICKS(30));
+        }
+
+        // Sanft ausblenden
+        for (int f = bright; f >= 0; f -= 2) {
+            strip.setBrightness((uint8_t)(f > 0 ? f : 0));
+            strip.show();
+            vTaskDelay(pdMS_TO_TICKS(15));
+        }
+        strip.clear();
+        strip.show();
+    }
+
+    // ── Normaler Betrieb ──
     static rgbConfigStruct rgbConfigRec;
     rgbConfigRec.rgbMode       = 0;
     rgbConfigRec.rgbSwitch     = false;
