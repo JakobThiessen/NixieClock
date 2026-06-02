@@ -16,7 +16,10 @@
 extern SdCacheEntry sdFileCache[];
 extern int sdFileCacheCount;
 extern SdFs sdCard;
+extern SoftSpiDriver<TFT_MISO, TFT_MOSI, TFT_CLK> softSpi;
 extern SemaphoreHandle_t xSpiMutex;
+extern volatile bool bootInitDone;
+extern weatherDataStruct weatherData;
 
 char XML[4096];
 char buf[64];
@@ -36,6 +39,7 @@ void SendWebsite();
 void HandleSetNTP();
 void HandleSetRGB();
 void HandleSetDisplay();
+void HandleSetWeather();
 void HandleSdList();
 void HandleSdFile();
 void HandleSetAnim();
@@ -98,12 +102,10 @@ void tCodeServerTask(void *pvParameters)
     if (prefs.isKey("dp_cal"))   systemConfig.calendarEnabled    = prefs.getUChar("dp_cal")   != 0;
     if (prefs.isKey("dp_bg"))    systemConfig.backgroundEnabled  = prefs.getUChar("dp_bg")    != 0;
     if (prefs.isKey("anim_m"))   systemConfig.bootAnimMode       = prefs.getUChar("anim_m");
-    if (prefs.isKey("cl_fg_r"))  systemConfig.clockFgR           = prefs.getUChar("cl_fg_r");
-    if (prefs.isKey("cl_fg_g"))  systemConfig.clockFgG           = prefs.getUChar("cl_fg_g");
-    if (prefs.isKey("cl_fg_b"))  systemConfig.clockFgB           = prefs.getUChar("cl_fg_b");
-    if (prefs.isKey("cl_bg_r"))  systemConfig.clockBgR           = prefs.getUChar("cl_bg_r");
-    if (prefs.isKey("cl_bg_g"))  systemConfig.clockBgG           = prefs.getUChar("cl_bg_g");
-    if (prefs.isKey("cl_bg_b"))  systemConfig.clockBgB           = prefs.getUChar("cl_bg_b");
+    if (prefs.isKey("wt_en"))    systemConfig.weatherEnabled     = prefs.getUChar("wt_en") != 0;
+    if (prefs.isKey("wt_city")) { String _c = prefs.getString("wt_city"); strncpy(systemConfig.weatherCity, _c.c_str(), 31); systemConfig.weatherCity[31] = '\0'; }
+    if (prefs.isKey("wt_lat"))   systemConfig.weatherLat         = prefs.getFloat("wt_lat");
+    if (prefs.isKey("wt_lon"))   systemConfig.weatherLon         = prefs.getFloat("wt_lon");
     prefs.end();
     Serial.println("--> Prefs loaded");
 
@@ -115,10 +117,7 @@ void tCodeServerTask(void *pvParameters)
     // Apply NTP config after WiFi is connected (needs DNS)
     applyNTPConfig();
     Serial.println("--> NTP configured");
-
-    // Signalisiere anderen Tasks, dass Initialisierung abgeschlossen ist
-    bootInitDone = true;
-    Serial.println("--> bootInitDone = true");
+    bootInitDone = true;  // Animation kann jetzt enden
 
     server.on("/", SendWebsite);
     server.on("/xml", SendXML);
@@ -130,6 +129,7 @@ void tCodeServerTask(void *pvParameters)
     server.on("/SD_LIST", HandleSdList);
     server.on("/SD_FILE", HandleSdFile);
     server.on("/SET_ANIM", HandleSetAnim);
+    server.on("/SET_WEATHER", HandleSetWeather);
     server.begin();
     Serial.print("--> Init WebServer OK: "); Serial.println(millis());
 
@@ -223,22 +223,16 @@ void SendXML()
         "<CPU>%u</CPU>"
         "<CHIP>%s</CHIP>"
         "<RGBM>%u</RGBM>"
-        "<RGBR>%u</RGBR>"
-        "<RGBG>%u</RGBG>"
-        "<RGBB>%u</RGBB>"
-        "<RGBBR>%u</RGBBR>"
         "<DPINT>%u</DPINT>"
         "<DPBR>%u</DPBR>"
         "<SLIDE>%u</SLIDE>"
         "<CAL>%u</CAL>"
         "<BG>%u</BG>"
         "<ANIMM>%u</ANIMM>"
-        "<CLFR>%u</CLFR>"
-        "<CLFG>%u</CLFG>"
-        "<CLFB>%u</CLFB>"
-        "<CLBR>%u</CLBR>"
-        "<CLBG>%u</CLBG>"
-        "<CLBB>%u</CLBB>"
+        "<WEN>%u</WEN>"
+        "<WCITY>%s</WCITY>"
+        "<WLAT>%.4f</WLAT>"
+        "<WLON>%.4f</WLON>"
         "</Data>",
         (unsigned)ESP.getFreeHeap(),
         WiFi.RSSI(),
@@ -252,22 +246,16 @@ void SendXML()
         (unsigned)ESP.getCpuFreqMHz(),
         ESP.getChipModel(),
         (unsigned)rgbConfig.rgbMode,
-        (unsigned)rgbConfig.rgbR,
-        (unsigned)rgbConfig.rgbG,
-        (unsigned)rgbConfig.rgbB,
-        (unsigned)rgbConfig.rgbBrigthness,
         (unsigned)systemConfig.displayIntervalSec,
         (unsigned)systemConfig.displayBrightness,
         (unsigned)systemConfig.slideshowEnabled,
         (unsigned)systemConfig.calendarEnabled,
         (unsigned)systemConfig.backgroundEnabled,
         (unsigned)systemConfig.bootAnimMode,
-        (unsigned)systemConfig.clockFgR,
-        (unsigned)systemConfig.clockFgG,
-        (unsigned)systemConfig.clockFgB,
-        (unsigned)systemConfig.clockBgR,
-        (unsigned)systemConfig.clockBgG,
-        (unsigned)systemConfig.clockBgB
+        (unsigned)systemConfig.weatherEnabled,
+        systemConfig.weatherCity,
+        systemConfig.weatherLat,
+        systemConfig.weatherLon
     );
     server.send(200, "text/xml", XML);
 }
@@ -312,31 +300,40 @@ void HandleSetRGB()
     server.send(200, "text/plain", "OK");
 }
 
+void HandleSetWeather()
+{
+    if (server.hasArg("EN"))   systemConfig.weatherEnabled = server.arg("EN").toInt() != 0;
+    if (server.hasArg("CITY")) { String _c = server.arg("CITY"); strncpy(systemConfig.weatherCity, _c.c_str(), 31); systemConfig.weatherCity[31] = '\0'; }
+    if (server.hasArg("LAT"))  systemConfig.weatherLat = server.arg("LAT").toFloat();
+    if (server.hasArg("LON"))  systemConfig.weatherLon = server.arg("LON").toFloat();
+    // Reset cache so next fetch uses new settings
+    weatherData.valid = false;
+    weatherData.lastFetchMs = 0;
+    prefs.begin("nixie", false);
+    prefs.putUChar("wt_en",   systemConfig.weatherEnabled ? 1 : 0);
+    prefs.putString("wt_city", systemConfig.weatherCity);
+    prefs.putFloat("wt_lat",  systemConfig.weatherLat);
+    prefs.putFloat("wt_lon",  systemConfig.weatherLon);
+    prefs.end();
+    Serial.printf("[WEATHER] config: en=%d city=%s lat=%.4f lon=%.4f\n",
+        systemConfig.weatherEnabled, systemConfig.weatherCity,
+        systemConfig.weatherLat, systemConfig.weatherLon);
+    server.send(200, "text/plain", "OK");
+}
+
 void HandleSetDisplay()
 {
-    if (server.hasArg("INTERVAL")) systemConfig.displayIntervalSec = (uint16_t)server.arg("INTERVAL").toInt();
-    if (server.hasArg("BRIGHT"))   systemConfig.displayBrightness  = (uint16_t)server.arg("BRIGHT").toInt();
-    if (server.hasArg("SLIDE"))    systemConfig.slideshowEnabled   = server.arg("SLIDE").toInt() != 0;
-    if (server.hasArg("CAL"))      systemConfig.calendarEnabled    = server.arg("CAL").toInt()   != 0;
-    if (server.hasArg("BG"))       systemConfig.backgroundEnabled  = server.arg("BG").toInt()    != 0;
-    if (server.hasArg("CFR"))      systemConfig.clockFgR           = (uint8_t)server.arg("CFR").toInt();
-    if (server.hasArg("CFG"))      systemConfig.clockFgG           = (uint8_t)server.arg("CFG").toInt();
-    if (server.hasArg("CFB"))      systemConfig.clockFgB           = (uint8_t)server.arg("CFB").toInt();
-    if (server.hasArg("CBR"))      systemConfig.clockBgR           = (uint8_t)server.arg("CBR").toInt();
-    if (server.hasArg("CBG"))      systemConfig.clockBgG           = (uint8_t)server.arg("CBG").toInt();
-    if (server.hasArg("CBB"))      systemConfig.clockBgB           = (uint8_t)server.arg("CBB").toInt();
+    systemConfig.displayIntervalSec = (uint16_t)server.arg("INTERVAL").toInt();
+    systemConfig.displayBrightness  = (uint16_t)server.arg("BRIGHT").toInt();
+    if (server.hasArg("SLIDE")) systemConfig.slideshowEnabled  = server.arg("SLIDE").toInt() != 0;
+    if (server.hasArg("CAL"))   systemConfig.calendarEnabled   = server.arg("CAL").toInt()   != 0;
+    if (server.hasArg("BG"))    systemConfig.backgroundEnabled = server.arg("BG").toInt()    != 0;
     prefs.begin("nixie", false);
     prefs.putUShort("dp_int",  systemConfig.displayIntervalSec);
     prefs.putUShort("dp_br",   systemConfig.displayBrightness);
     prefs.putUChar("dp_slide", systemConfig.slideshowEnabled  ? 1 : 0);
     prefs.putUChar("dp_cal",   systemConfig.calendarEnabled   ? 1 : 0);
     prefs.putUChar("dp_bg",    systemConfig.backgroundEnabled ? 1 : 0);
-    prefs.putUChar("cl_fg_r",  systemConfig.clockFgR);
-    prefs.putUChar("cl_fg_g",  systemConfig.clockFgG);
-    prefs.putUChar("cl_fg_b",  systemConfig.clockFgB);
-    prefs.putUChar("cl_bg_r",  systemConfig.clockBgR);
-    prefs.putUChar("cl_bg_g",  systemConfig.clockBgG);
-    prefs.putUChar("cl_bg_b",  systemConfig.clockBgB);
     prefs.end();
     server.send(200, "text/plain", "OK");
 }
@@ -387,6 +384,8 @@ void HandleSdList()
 
         json += "{\"name\":\"";
         escapeJson(e.name, json);
+        json += "\",\"path\":\"";
+        escapeJson(e.path, json);
         json += "\",\"type\":\"";
         json += e.isDir ? "dir" : "file";
         json += '"';
@@ -427,10 +426,6 @@ void HandleSdFile()
         return;
     }
 
-    // Diagnostic: check if card is still reachable at raw level
-    Serial.printf("[SD_FILE] card type=%d sectors=%lu\n",
-                  (int)sdCard.card()->type(), (unsigned long)sdCard.card()->sectorCount());
-
     // Deselect ALL display CS pins explicitly before SD access
     digitalWrite(TFT_CS_0, HIGH);
     digitalWrite(TFT_CS_1, HIGH);
@@ -438,11 +433,12 @@ void HandleSdFile()
     digitalWrite(TFT_CS_3, HIGH);
     digitalWrite(TFT_CS_4, HIGH);
 
-    // Send clock pulses with SD_CS HIGH to sync card
-    digitalWrite(SD_CS, HIGH);
-    SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
-    for (int i = 0; i < 10; i++) SPI.transfer(0xFF);
-    SPI.endTransaction();
+    // SPI-Peripherie freigeben damit SoftSpiDriver GPIO-Zugriff hat
+    SPI.end();
+
+    // Buffer aktivieren fuer SD-Zugriff
+    digitalWrite(SD_BUF_OE, LOW);
+    delayMicroseconds(1);
 
     FsFile f = sdCard.open(path.c_str(), O_RDONLY);
 
@@ -451,9 +447,9 @@ void HandleSdFile()
         Serial.println("[SD_FILE] open failed, aggressive reinit...");
 
         // 1) Kill SdFat state completely
-        sdCard.end();  // calls SPI.end() internally
+        sdCard.end();
 
-        // 2) Disconnect all SPI pins from peripheral, set as GPIO
+        // 2) Set pins as GPIO
         pinMode(TFT_CLK, OUTPUT);
         pinMode(TFT_MOSI, OUTPUT);
         pinMode(TFT_MISO, INPUT_PULLUP);
@@ -461,20 +457,10 @@ void HandleSdFile()
         digitalWrite(SD_CS, HIGH);
         digitalWrite(TFT_CLK, LOW);
         digitalWrite(TFT_MOSI, HIGH);
-        delay(100);  // let card see stable lines
+        delay(100);
 
-        // 3) Re-init SPI peripheral
-        SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI);
-
-        // 4) Card power-on sequence: >74 clock pulses at <=400kHz with CS HIGH
-        digitalWrite(SD_CS, HIGH);
-        SPI.beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE0));
-        for (int i = 0; i < 20; i++) SPI.transfer(0xFF);  // 160 clocks
-        SPI.endTransaction();
-        delay(50);
-
-        // 5) Re-init SD card
-        if (sdCard.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(1), &SPI))) {
+        // 3) Re-init SD card via SoftSpi
+        if (sdCard.begin(SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(0), &softSpi))) {
             f = sdCard.open(path.c_str(), O_RDONLY);
             Serial.printf("[SD_FILE] retry open=%d\n", (int)(bool)f);
         } else {
@@ -487,37 +473,46 @@ void HandleSdFile()
 
     if (!f || f.isDirectory()) {
         if (f) f.close();
+        digitalWrite(SD_BUF_OE, HIGH);  // Buffer aus
+        SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);  // SPI restore
         xSemaphoreGiveRecursive(xSpiMutex);
         server.send(404, "text/plain", "Not found");
         return;
     }
 
     uint32_t fileSize = (uint32_t)f.fileSize();
-    uint8_t* fileData = (uint8_t*)malloc(fileSize);
-    if (!fileData) {
+    Serial.printf("[SD_FILE] sending %u bytes\n", fileSize);
+
+    // Chunk-Buffer: klein genug um immer in Heap zu passen
+    const size_t CHUNK = 2048;
+    uint8_t* buf = (uint8_t*)malloc(CHUNK);
+    if (!buf) {
         f.close();
+        digitalWrite(SD_BUF_OE, HIGH);
+        SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);
         xSemaphoreGiveRecursive(xSpiMutex);
         server.send(503, "text/plain", "Out of memory");
         return;
     }
-    f.read(fileData, fileSize);
-    f.close();
-    xSemaphoreGiveRecursive(xSpiMutex);
 
-    Serial.printf("[SD_FILE] sending %u bytes\n", fileSize);
     server.sendHeader("Cache-Control", "max-age=60");
     server.setContentLength(fileSize);
     server.send(200, ct, "");
 
     WiFiClient client = server.client();
-    uint32_t sent = 0;
-    while (sent < fileSize && client.connected()) {
-        uint32_t chunk = fileSize - sent;
-        if (chunk > 1460) chunk = 1460;  // TCP MSS
-        client.write(fileData + sent, chunk);
-        sent += chunk;
+    uint32_t remaining = fileSize;
+    while (remaining > 0 && client.connected()) {
+        size_t toRead = (remaining < CHUNK) ? (size_t)remaining : CHUNK;
+        int rd = f.read(buf, toRead);
+        if (rd <= 0) break;
+        client.write(buf, rd);
+        remaining -= rd;
     }
-    free(fileData);
+    free(buf);
+    f.close();
+    digitalWrite(SD_BUF_OE, HIGH);  // Buffer aus - SD geschuetzt
+    SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);  // SPI wieder fuer Displays
+    xSemaphoreGiveRecursive(xSpiMutex);
 }
 
 void HandleSetAnim()

@@ -34,8 +34,8 @@ extern "C" {
 #define TFT_CS_3        13
 #define TFT_CS_4        14
 
-#define SD_CS           4
-#define SD_CS_INP       5
+#define SD_CS           5
+#define SD_BUF_OE       4   // /OE der 74LVC1G125 Tristate-Buffer (LOW=aktiv)
 #define DISPLAY_POW_EN  26
 
 #define LED_PIN         33
@@ -48,7 +48,7 @@ extern "C" {
 
 #define SPI_FREQUENCY 16000000U
 
-#define FW_VERSION "4.2.1"
+#define FW_VERSION "4.6.0"
 #define FW_BUILD_DATE __DATE__
 #define FW_BUILD_TIME __TIME__
 
@@ -92,7 +92,18 @@ typedef struct{
     uint8_t clockBgR;
     uint8_t clockBgG;
     uint8_t clockBgB;
+    bool weatherEnabled;
+    char weatherCity[32];
+    float weatherLat;
+    float weatherLon;
 }systemConfigStruct;
+
+typedef struct{
+    float temperature;
+    uint8_t weatherCode;
+    unsigned long lastFetchMs;
+    bool valid;
+}weatherDataStruct;
 
 
 typedef struct{
@@ -132,6 +143,7 @@ extern volatile bool bootInitDone;
 extern rgbConfigStruct rgbConfig;
 extern systemConfigStruct systemConfig;
 extern clockConfiguration clockConfig;
+extern weatherDataStruct weatherData;
 
 #ifdef __cplusplus
 }

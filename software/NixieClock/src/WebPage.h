@@ -123,6 +123,7 @@ input:checked+.tgl-sl:before{transform:translateX(20px)}
 <button class="tb on" onclick="tab('sys',this)">System</button>
 <button class="tb" onclick="tab('rgb',this)">NeoPixel</button>
 <button class="tb" onclick="tab('dsp',this)">Display</button>
+<button class="tb" onclick="tab('sdc',this)">SD-Karte</button>
 </div>
 <div class="wrap">
 <div id="sys" class="pn on">
@@ -157,6 +158,27 @@ input:checked+.tgl-sl:before{transform:translateX(20px)}
 </select>
 </div>
 <div class="fr"><span class="fl"></span><button class="btn" onclick="saveNTP()">Speichern</button></div>
+</div>
+<div class="card">
+<div class="ct">Wetter</div>
+<div class="fr">
+<span class="fl">Wetter anzeigen</span>
+<label class="tgl"><input type="checkbox" id="w-en" checked><span class="tgl-sl"></span></label>
+</div>
+<div class="fr">
+<span class="fl">Ort</span>
+<input type="text" id="w-city" value="Berlin" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--bg);color:var(--fg)">
+</div>
+<div class="fr">
+<span class="fl">Breitengrad</span>
+<input type="number" id="w-lat" value="52.52" step="0.0001" style="width:100px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--bg);color:var(--fg)">
+</div>
+<div class="fr">
+<span class="fl">Laengengrad</span>
+<input type="number" id="w-lon" value="13.405" step="0.0001" style="width:100px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--bg);color:var(--fg)">
+</div>
+<div class="fr"><span class="fl"></span><button class="btn" onclick="saveWeather()">Speichern</button></div>
+<div style="margin-top:8px;font-size:.75rem;color:#888">Datenquelle: <a href="https://open-meteo.com" target="_blank" style="color:#6af">Open-Meteo.com</a> (kostenlos, kein API-Key)</div>
 </div>
 </div>
 <div id="rgb" class="pn">
@@ -245,9 +267,20 @@ input:checked+.tgl-sl:before{transform:translateX(20px)}
 <div class="fr"><span class="fl"></span><button class="btn" onclick="saveDisp()">Speichern</button></div>
 </div>
 </div>
+<div id="sdc" class="pn">
+<div class="card">
+<div class="ct">SD-Karte Dateibrowser</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+<div id="sd-tree" style="flex:1;min-width:200px;max-height:400px;overflow:auto;font-size:.85rem;border:1px solid var(--bd);border-radius:8px;padding:8px;background:var(--bg)"></div>
+<div id="sd-preview" style="flex:1;min-width:200px;text-align:center;border:1px solid var(--bd);border-radius:8px;padding:8px;background:var(--bg)">
+<div style="color:var(--mu);padding:40px 0">Datei auswaehlen</div>
+</div>
+</div>
+</div>
+</div>
 <div id="toast"></div>
 <script>
-var cMode=0,rgbInitDone=false,dispInitDone=false,clockInitDone=false;
+var cMode=0,rgbInitDone=false,dispInitDone=false,clockInitDone=false,weatherInitDone=false;
 function tab(id,b){document.querySelectorAll('.pn').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tb').forEach(x=>x.classList.remove('on'));document.getElementById(id).classList.add('on');b.classList.add('on');}
 function toast(m,ok){var t=document.getElementById('toast');t.textContent=m;t.style.borderColor=ok?'var(--ok)':'var(--er)';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2500);}
 function gx(x,t){var m=x.match('<'+t+'>([\\s\\S]*?)<\\/'+t+'>');return m?m[1]:'';}
@@ -268,6 +301,7 @@ var utc=gx(x,'UTC');if(utc!='')document.getElementById('ntp-u').value=utc;
 if(!rgbInitDone){cMode=parseInt(gx(x,'RGBM'))||0;document.querySelectorAll('.mb').forEach(function(b,i){b.classList.toggle('on',i===cMode);});var rr=parseInt(gx(x,'RGBR'))||0,rg=parseInt(gx(x,'RGBG'))||0,rb=parseInt(gx(x,'RGBB'))||0;var rhex='#'+('0'+rr.toString(16)).slice(-2)+('0'+rg.toString(16)).slice(-2)+('0'+rb.toString(16)).slice(-2);document.getElementById('rgb-c').value=rhex;document.getElementById('rgb-p').style.background=rhex;var rbr=parseInt(gx(x,'RGBBR'))||128;document.getElementById('rgb-b').value=rbr;document.getElementById('rgb-bv').textContent=rbr;rgbInitDone=true;}
 if(!dispInitDone){var di=parseInt(gx(x,'DPINT'))||5;document.getElementById('dp-i').value=di;document.getElementById('dp-iv').textContent=di+' s';var db=parseInt(gx(x,'DPBR'))||4095;document.getElementById('dp-b').value=db;document.getElementById('dp-bv').textContent=Math.round(db/40.95)+'%';document.getElementById('dp-slide').checked=gx(x,'SLIDE')==='1';document.getElementById('dp-cal').checked=gx(x,'CAL')!=='0';document.getElementById('dp-bg').checked=gx(x,'BG')==='1';dispInitDone=true;}
 if(!clockInitDone){var cfr=parseInt(gx(x,'CLFR'))||248,cfg2=parseInt(gx(x,'CLFG'))||0,cfb=parseInt(gx(x,'CLFB'))||248;var cbr=parseInt(gx(x,'CLBR'))||24,cbg=parseInt(gx(x,'CLBG'))||24,cbb=parseInt(gx(x,'CLBB'))||24;document.getElementById('cl-fg').value='#'+('0'+cfr.toString(16)).slice(-2)+('0'+cfg2.toString(16)).slice(-2)+('0'+cfb.toString(16)).slice(-2);document.getElementById('cl-bg').value='#'+('0'+cbr.toString(16)).slice(-2)+('0'+cbg.toString(16)).slice(-2)+('0'+cbb.toString(16)).slice(-2);updSeg();clockInitDone=true;}
+if(!weatherInitDone){document.getElementById('w-en').checked=gx(x,'WEN')!=='0';document.getElementById('w-city').value=gx(x,'WCITY')||'Berlin';var wla=gx(x,'WLAT');if(wla)document.getElementById('w-lat').value=wla;var wlo=gx(x,'WLON');if(wlo)document.getElementById('w-lon').value=wlo;weatherInitDone=true;}
 }).catch(function(){});
 }
 setInterval(poll,2000);poll();
@@ -277,6 +311,11 @@ function sendRGB(){var h=document.getElementById('rgb-c').value;var r=parseInt(h
 function saveDisp(){var i=document.getElementById('dp-i').value;var b=document.getElementById('dp-b').value;var sl=document.getElementById('dp-slide').checked?1:0;var ca=document.getElementById('dp-cal').checked?1:0;var bg=document.getElementById('dp-bg').checked?1:0;fetch('/SET_DISPLAY?INTERVAL='+i+'&BRIGHT='+b+'&SLIDE='+sl+'&CAL='+ca+'&BG='+bg).then(function(r){toast(r.ok?'Display gespeichert':'Fehler',r.ok);}).catch(function(){toast('Fehler',false);});}
 function updSeg(){var fg=document.getElementById('cl-fg').value;var bg=document.getElementById('cl-bg').value;document.getElementById('seg-bg').setAttribute('fill',bg);document.querySelectorAll('.seg-fg').forEach(function(s){s.setAttribute('fill',fg);});}
 function saveClk(){var fh=document.getElementById('cl-fg').value;var bh=document.getElementById('cl-bg').value;var fr=parseInt(fh.slice(1,3),16),fg=parseInt(fh.slice(3,5),16),fb=parseInt(fh.slice(5,7),16);var br=parseInt(bh.slice(1,3),16),bg=parseInt(bh.slice(3,5),16),bb=parseInt(bh.slice(5,7),16);fetch('/SET_DISPLAY?CFR='+fr+'&CFG='+fg+'&CFB='+fb+'&CBR='+br+'&CBG='+bg+'&CBB='+bb).then(function(r){toast(r.ok?'Farben gespeichert':'Fehler',r.ok);}).catch(function(){toast('Fehler',false);});}
+function saveWeather(){var en=document.getElementById('w-en').checked?1:0;var city=document.getElementById('w-city').value.trim();var lat=document.getElementById('w-lat').value;var lon=document.getElementById('w-lon').value;if(!city){toast('Ort eingeben!',false);return;}fetch('/SET_WEATHER?EN='+en+'&CITY='+encodeURIComponent(city)+'&LAT='+lat+'&LON='+lon).then(function(r){toast(r.ok?'Wetter gespeichert':'Fehler',r.ok);}).catch(function(){toast('Fehler',false);});}
+function sdLoad(p){fetch('/SD_LIST?path='+encodeURIComponent(p)).then(r=>r.json()).then(function(d){var h='';d.sort(function(a,b){if(a.dir&&!b.dir)return -1;if(!a.dir&&b.dir)return 1;return a.name.localeCompare(b.name);});if(p!=='/'){h+='<div style="cursor:pointer;padding:2px 0" onclick="sdLoad(\''+p.replace(/\/[^/]*\/?$/,'/')+'\')">&#128281; ..</div>';}d.forEach(function(e){if(e.dir){h+='<div style="cursor:pointer;padding:2px 0" onclick="sdLoad(\''+e.path+'\')">&#128193; '+e.name+'</div>';}else{h+='<div style="cursor:pointer;padding:2px 0" onclick="sdFile(\''+e.path+'\',\''+e.name+'\')">&#128196; '+e.name+' <small style=\"color:var(--mu)\">('+sdSize(e.size)+')</small></div>';}});document.getElementById('sd-tree').innerHTML=h;}).catch(function(){document.getElementById('sd-tree').innerHTML='<div style=\"color:var(--er)\">Fehler beim Laden</div>';});}
+function sdSize(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';}
+function sdFile(p,n){var pv=document.getElementById('sd-preview');var ext=n.toLowerCase().split('.').pop();if(['jpg','jpeg','png','bmp','gif'].indexOf(ext)>=0){pv.innerHTML='<div style=\"margin-bottom:8px;font-weight:600\">'+n+'</div><img src=\"/SD_FILE?path='+encodeURIComponent(p)+'\" style=\"max-width:100%;max-height:300px;border-radius:6px\">';}else{pv.innerHTML='<div style=\"margin-bottom:8px;font-weight:600\">'+n+'</div><div style=\"color:var(--mu);padding:20px\">Keine Vorschau verfuegbar</div>';}}
+sdLoad('/');
 </script>
 </body>
 </html>

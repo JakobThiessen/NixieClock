@@ -62,7 +62,8 @@ Multi-display clock firmware for an ESP32-based Nixie-style clock with five TFT 
 | TFT_CS_2 | 32 | ST7789 Display 3 (Minute Zehner) |
 | TFT_CS_3 | 13 | ST7789 Display 4 (Minute Einer) |
 | TFT_CS_4 | 14 | ST7735 Display 0 (Info-Display) |
-| SD_CS | 4 | SD-Karten-Modul |
+| SD_CS | 5 | SD-Karten-Modul (Chip Select) |
+| SD_BUF_OE | 4 | 74LVC1G125 Buffer /OE (CLK+MOSI zu SD) |
 
 ### Weitere GPIOs
 
