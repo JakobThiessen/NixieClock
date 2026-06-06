@@ -14,15 +14,6 @@ void tCodeUart(void *pvParameters)
 
     for (;;)
     {
-        Serial.print("Task UART running: "); Serial.println( millis());
-        /*
-        vTaskList(ptrTaskList);
-        Serial.println(F("**********************************"));
-        Serial.println(F("Task  State   Prio    Stack    Num")); 
-        Serial.println(F("**********************************"));
-        Serial.print(ptrTaskList);
-        Serial.println(F("**********************************"));
-        */
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

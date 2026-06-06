@@ -186,8 +186,6 @@ void UpdateSlider()
 {
     String t_state = server.arg("VALUE");
     brightness = t_state.toInt();
-    Serial.print("UpdateSlider ");
-    Serial.println(brightness);
     
     // Map brightness to LED brightness
     int ledBrightness = map(brightness, 0, 255, 0, 255);
@@ -203,8 +201,6 @@ void ProcessButton_0()
 {
     LED0 = !LED0;
     //digitalWrite(PIN_LED, LED0);
-    Serial.print("Button 0 ");
-    Serial.println(LED0);
     rgbConfig.rgbSwitch = LED0;
     server.send(200, "text/plain", "");
     xQueueSend(xQueue_RGB_Config, &rgbConfig, 10);  // Send queue
@@ -212,8 +208,6 @@ void ProcessButton_0()
 
 void SendWebsite()
 {
-    Serial.printf("sending web page (free heap: %u)\n", ESP.getFreeHeap());
-    // Stream directly from flash – avoids ~20KB heap allocation
     server.setContentLength(strlen_P(PAGE_MAIN));
     server.send_P(200, PSTR("text/html"), PAGE_MAIN);
 }
@@ -325,9 +319,6 @@ void HandleSetRGB()
     rgbConfig.rgbB          = (uint8_t)server.arg("B").toInt();
     rgbConfig.rgbBrigthness = (uint8_t)server.arg("BRIGHT").toInt();
     rgbConfig.rgbSwitch     = (rgbConfig.rgbMode != 0);
-    Serial.printf("--> RGB: mode=%u R=%u G=%u B=%u br=%u\n",
-        rgbConfig.rgbMode, rgbConfig.rgbR, rgbConfig.rgbG,
-        rgbConfig.rgbB, rgbConfig.rgbBrigthness);
     xQueueSend(xQueue_RGB_Config, &rgbConfig, 10);
     prefs.begin("nixie", false);
     prefs.putUInt("rgb_mode", rgbConfig.rgbMode);
@@ -355,9 +346,6 @@ void HandleSetWeather()
     prefs.putFloat("wt_lat",  systemConfig.weatherLat);
     prefs.putFloat("wt_lon",  systemConfig.weatherLon);
     prefs.end();
-    Serial.printf("[WEATHER] config: en=%d city=%s lat=%.4f lon=%.4f\n",
-        systemConfig.weatherEnabled, systemConfig.weatherCity,
-        systemConfig.weatherLat, systemConfig.weatherLon);
     saveConfigToSD();
     server.send(200, "text/plain", "OK");
 }
@@ -380,7 +368,6 @@ void HandleSetDisplay()
 
     // Apply brightness to hardware immediately
     if (server.hasArg("BRIGHT")) {
-        Serial.printf("[DISPLAY] brightness set via web: %u\n", systemConfig.displayBrightness);
         pca9685_setAllChannels(systemConfig.displayBrightness);
     }
 
@@ -420,8 +407,6 @@ void HandleSdList()
     // Normalize: remove trailing slash except root
     while (path.length() > 1 && path.endsWith("/")) path.remove(path.length() - 1);
 
-    Serial.printf("[SD_LIST] path='%s' cacheCount=%d\n", path.c_str(), sdFileCacheCount);
-
     if (!systemConfig.sdCardDetected || sdFileCacheCount == 0) {
         server.send(503, "application/json", "[]");
         return;
@@ -459,7 +444,6 @@ void HandleSdList()
         json += '}';
     }
     json += ']';
-    Serial.printf("[SD_LIST] found %d entries from cache\n", count);
     server.sendHeader("Cache-Control", "no-store");
     server.send(200, "application/json", json);
 }
@@ -472,7 +456,6 @@ void HandleSdFile()
     }
 
     String path = server.arg("path");
-    Serial.printf("[SD_FILE] %s\n", path.c_str());
 
     String ct = "application/octet-stream";
     String lp = path; lp.toLowerCase();
@@ -532,8 +515,6 @@ void HandleSdFile()
         }
     }
 
-    Serial.printf("[SD_FILE] open=%d\n", (int)(bool)f);
-
     if (!f || f.isDirectory()) {
         if (f) f.close();
         digitalWrite(SD_BUF_OE, HIGH);  // Buffer aus
@@ -544,7 +525,6 @@ void HandleSdFile()
     }
 
     uint32_t fileSize = (uint32_t)f.fileSize();
-    Serial.printf("[SD_FILE] sending %u bytes\n", fileSize);
 
     // Chunk-Buffer: klein genug um immer in Heap zu passen
     const size_t CHUNK = 2048;
@@ -728,7 +708,6 @@ bool saveConfigToSD()
     f.close();
 
     sdReleaseBus();
-    Serial.printf("[CFG] saveConfigToSD: %u bytes written\n", (unsigned)len);
 
     // Keep the RAM file cache in sync so the SD browser shows the file.
     // Look for an existing entry; add one if not found.
@@ -767,7 +746,6 @@ void HandleSdDelete()
         return;
     }
     String path = server.arg("path");
-    Serial.printf("[SD_DELETE] %s\n", path.c_str());
 
     if (!sdAcquireBus()) {
         server.send(503, "text/plain", "Busy");
@@ -799,7 +777,7 @@ void HandleSdDelete()
     }
 
     sdReleaseBus();
-    Serial.printf("[SD_DELETE] result: %s\n", ok ? "OK" : "FAIL");
+    if (!ok) Serial.printf("[SD_DELETE] FAIL: %s\n", path.c_str());
     server.send(ok ? 200 : 500, "text/plain", ok ? "OK" : "Delete failed");
 }
 

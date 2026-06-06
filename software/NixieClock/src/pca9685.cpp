@@ -127,21 +127,17 @@ bool pca9685_begin()
     // MODE1: wake up (clear SLEEP bit), enable auto-increment, disable ALLCALL
     // POR default is 0x11 (SLEEP=1, ALLCALL=1) — must clear SLEEP to use oscillator
     _writereg(PCA9685_MODE1, PCA9685_MODE1_AI);  // = 0x20
-    Serial.println("[PCA9685] MODE1=0x20 (wake, AI=1, ALLCALL=0): OK");
     delay(1);   // >= 500 µs for oscillator stabilisation after wakeup
 
     // MODE2: totem-pole output drivers, update on STOP
     _writereg(PCA9685_MODE2, PCA9685_MODE2_OUTDRV);  // = 0x04
-    Serial.println("[PCA9685] MODE2=0x04 (totem-pole): OK");
 
     // All channels full brightness via ALLCALL broadcast registers
     _writereg(PCA9685_ALL_ON_L,  0x00);
     _writereg(PCA9685_ALL_ON_H,  PCA9685_FULL_ON);   // FULL_ON bit → always on
     _writereg(PCA9685_ALL_OFF_L, 0x00);
     _writereg(PCA9685_ALL_OFF_H, 0x00);
-    Serial.println("[PCA9685] All channels FULL_ON: OK");
-
-    pca9685_dumpRegs();
+    Serial.println("[PCA9685] init OK");
     return true;
 }
 
@@ -161,8 +157,6 @@ void pca9685_setAllChannels(uint16_t brightness_4095)
     if (s_addr == 0xFF) { Serial.println("[PCA9685] not init!"); return; }
     uint8_t on_l, on_h, off_l, off_h;
     _brightness_to_regs(brightness_4095, on_l, on_h, off_l, off_h);
-    Serial.printf("[PCA9685] setAllChannels %u  ON_H=0x%02X OFF_L=0x%02X OFF_H=0x%02X\n",
-                  brightness_4095, on_h, off_l, off_h);
 
     i2c_take();
     // One 4-byte write to ALL_LED broadcast registers — sets all 16 channels at once

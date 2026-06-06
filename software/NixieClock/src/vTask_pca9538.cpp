@@ -107,7 +107,6 @@ void vTask_PCA9538(void* pvParameters)
         // IO0 (bit 0) falling edge → DIM
         if ((changed & (1u << PCA9538_BTN_DIM)) && !(cur & (1u << PCA9538_BTN_DIM)))
         {
-            Serial.println("[PCA9538] BTN_DIM pressed");
             uint16_t& br = systemConfig.displayBrightness;
             br = (br >= PCA9538_BRIGHT_STEP) ? br - PCA9538_BRIGHT_STEP : 0;
 
@@ -119,13 +118,11 @@ void vTask_PCA9538(void* pvParameters)
             prefs.end();
 
             saveConfigToSD();
-            Serial.printf("[PCA9538] brightness → %u\n", br);
         }
 
         // IO1 (bit 1) falling edge → BRIGHT
         if ((changed & (1u << PCA9538_BTN_BRT)) && !(cur & (1u << PCA9538_BTN_BRT)))
         {
-            Serial.println("[PCA9538] BTN_BRT pressed");
             uint16_t& br = systemConfig.displayBrightness;
             br = (br <= (0xFFF - PCA9538_BRIGHT_STEP)) ? br + PCA9538_BRIGHT_STEP : 0xFFF;
 
@@ -137,7 +134,6 @@ void vTask_PCA9538(void* pvParameters)
             prefs.end();
 
             saveConfigToSD();
-            Serial.printf("[PCA9538] brightness → %u\n", br);
         }
 
         lastIn = cur;

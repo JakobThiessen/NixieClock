@@ -619,7 +619,6 @@ int getLocTime(int *day, int *month, int *year, uint8_t *hour, uint8_t *min, uin
 {
     if (!getLocalTime(&timeinfo))
     {
-        Serial.println("Failed to obtain time");
         return -1;
     }
     *day = timeinfo.tm_mday;
@@ -630,14 +629,15 @@ int getLocTime(int *day, int *month, int *year, uint8_t *hour, uint8_t *min, uin
     *min = timeinfo.tm_min;
     *sec = timeinfo.tm_sec;
 
-    printf("Date [HH:MM:SS] - [dd.mm.YYYY]: %02d:%02d:%02d - %02d.%02d.%04d\n\r", 
-        timeinfo.tm_hour,
-        timeinfo.tm_min,
-        timeinfo.tm_sec,
-        timeinfo.tm_mday,
-        timeinfo.tm_mon+1,
-        timeinfo.tm_year+1900);
-    
+    // Print time once per second
+    static uint8_t lastPrintedSec = 0xFF;
+    if (timeinfo.tm_sec != lastPrintedSec) {
+        lastPrintedSec = timeinfo.tm_sec;
+        printf("%02d:%02d:%02d %02d.%02d.%04d\n",
+            timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec,
+            timeinfo.tm_mday, timeinfo.tm_mon+1, timeinfo.tm_year+1900);
+    }
+
     return 0;
 }
 
@@ -796,8 +796,6 @@ void drawAdventsKerzen()
 void setup(void)
 {
     Serial.begin(115200);
-    Serial.print("Start setup() millis(): "); Serial.println( millis());
-    Serial.println(F("Init: GPIO..."));
 
     Serial.printf("***** ESP32 Info ****\n\r");
     Serial.printf("** getChipCore:      %d\n\r", ESP.getChipCores() );
@@ -842,7 +840,6 @@ void setup(void)
 
     // === DIAGNOSE-TEST: Displays ZUERST, dann SD ===
     // So testen wir ob der HW-Tristate-Buffer auf CLK+MOSI funktioniert.
-    Serial.print("--> SPI.begin() time: "); Serial.println( millis());
     // WICHTIG: 4. Parameter = SS-Pin. Ohne Angabe benutzt VSPI GPIO5 als Hardware-SS!
     // Das verhindert dass digitalWrite(SD_CS) funktioniert.
     // Fix: GPIO 2 als dummy Hardware-SS verwenden (ist frei, nur onboard LED auf manchen Boards)
@@ -850,10 +847,8 @@ void setup(void)
     pinMode(TFT_MISO, INPUT_PULLUP);  // Pull-Up auf MISO - sonst floatet die Leitung auf 0
     pinMode(SD_CS, OUTPUT);
     digitalWrite(SD_CS, HIGH);
-    Serial.printf("[FIX] SPI SS auf GPIO2 (dummy), SD_CS=GPIO%d ist freies GPIO\n", SD_CS);
 
     digitalWrite(DISPLAY_POW_EN, HIGH);
-    Serial.print("--> Init DIO and DispReset time: "); Serial.println( millis());
     delay(50);
     pinMode(TFT_RESET, OUTPUT);
     displayRESET(TFT_RESET);
@@ -868,10 +863,8 @@ void setup(void)
         Serial.println("Error PCA9685 not connected!");
     }
 
-    Serial.print("--> Init BackLigth time: "); Serial.println( millis());
 
     /* DISPLAY INIT */
-    Serial.print("--> Start init Disp 1-5 time: "); Serial.println( millis());
 
     // Use this initializer if using a 1.8" TFT screen:
     handle_cs(0, LOW);
@@ -940,10 +933,8 @@ void setup(void)
     tft_3.setFont(&FreeMonoBoldOblique24pt7b);
     tft_4.setFont(&FreeMonoBoldOblique24pt7b);
 
-    Serial.print("--> Init TFT(5) time: "); Serial.println( millis());
 
     // === SD-KARTE INIT (nach Display-Init, Tristate-Buffer schuetzt SD) ===
-    Serial.print("[SD] init time: "); Serial.println(millis());
     digitalWrite(SD_BUF_OE, LOW);   // Buffer AN
     delay(10);
     SPI.end();                       // SPI-Peripherie freigeben fuer SoftSpiDriver
@@ -1068,10 +1059,7 @@ void setup(void)
         1,              /* priority of the task */
         &task_Display   /* Task handle to keep track of created task */
     );
-    Serial.printf("xTaskCreate Display: %s  free heap: %u\n",
-                  dispResult == pdPASS ? "OK" : "FEHLGESCHLAGEN", ESP.getFreeHeap());
-
-    Serial.print("Stop Setup() millis(): "); Serial.println( millis());
+    if (dispResult != pdPASS) Serial.println("ERROR: xTaskCreate Display FEHLGESCHLAGEN!");
 }
 
 /**************************** */
