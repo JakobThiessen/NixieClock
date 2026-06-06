@@ -48,7 +48,11 @@ extern "C" {
 
 #define SPI_FREQUENCY 16000000U
 
-#define FW_VERSION "4.6.0"
+// ─── I2C bus (PCA9538A button expander + PCA9685 backlight) ──────────────────
+#define I2C_SDA_PIN     21
+#define I2C_SCL_PIN     22
+
+#define FW_VERSION "4.8.5"
 #define FW_BUILD_DATE __DATE__
 #define FW_BUILD_TIME __TIME__
 
@@ -62,6 +66,7 @@ typedef struct {
 } SdCacheEntry;
 
 extern SemaphoreHandle_t xSpiMutex;
+extern SemaphoreHandle_t xI2cMutex;   // protects Wire (I2C) bus shared between PCA9685 + PCA9538A
 extern QueueHandle_t xQueue_RGB_Config;
 extern QueueHandle_t xQueue_WiFi;
 
@@ -147,6 +152,12 @@ extern weatherDataStruct weatherData;
 
 #ifdef __cplusplus
 }
+#endif
+
+// C++ only: saves all current settings as JSON to /sys/config.json on the SD card.
+// Thread-safe: takes xSpiMutex internally. No-op when SD is not present.
+#ifdef __cplusplus
+void saveConfigToSD();
 #endif
 
 #endif /* COMMON_CONFIG_h */

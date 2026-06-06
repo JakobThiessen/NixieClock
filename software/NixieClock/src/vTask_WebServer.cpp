@@ -10,6 +10,8 @@
 #include <Esp.h>
 #include <SDFat.h>
 #include <SPI.h>
+#include <ArduinoJson.h>
+#include "pca9685.h"
 #include "WebPage.h"
 #include "credentials.h"
 
@@ -42,8 +44,12 @@ void HandleSetDisplay();
 void HandleSetWeather();
 void HandleSdList();
 void HandleSdFile();
+void HandleSdDelete();
+void HandleSdUpload();
+void HandleSdUploadFile();
 void HandleSetAnim();
 void applyNTPConfig();
+void saveConfigToSD();
 
 void tCodeServerTask(void *pvParameters)
 {
@@ -106,11 +112,25 @@ void tCodeServerTask(void *pvParameters)
     if (prefs.isKey("wt_city")) { String _c = prefs.getString("wt_city"); strncpy(systemConfig.weatherCity, _c.c_str(), 31); systemConfig.weatherCity[31] = '\0'; }
     if (prefs.isKey("wt_lat"))   systemConfig.weatherLat         = prefs.getFloat("wt_lat");
     if (prefs.isKey("wt_lon"))   systemConfig.weatherLon         = prefs.getFloat("wt_lon");
+    if (prefs.isKey("cl_fg_r"))  systemConfig.clockFgR           = prefs.getUChar("cl_fg_r");
+    if (prefs.isKey("cl_fg_g"))  systemConfig.clockFgG           = prefs.getUChar("cl_fg_g");
+    if (prefs.isKey("cl_fg_b"))  systemConfig.clockFgB           = prefs.getUChar("cl_fg_b");
+    if (prefs.isKey("cl_bg_r"))  systemConfig.clockBgR           = prefs.getUChar("cl_bg_r");
+    if (prefs.isKey("cl_bg_g"))  systemConfig.clockBgG           = prefs.getUChar("cl_bg_g");
+    if (prefs.isKey("cl_bg_b"))  systemConfig.clockBgB           = prefs.getUChar("cl_bg_b");
     prefs.end();
     Serial.println("--> Prefs loaded");
 
+    // Apply persisted brightness to PCA9685 immediately after prefs are loaded
+    Serial.printf("[DISPLAY] restoring brightness from NVS: %u\n", systemConfig.displayBrightness);
+    pca9685_setAllChannels(systemConfig.displayBrightness);
+
     // Push persisted RGB config into the queue so the RGB task starts with correct values
     xQueueSend(xQueue_RGB_Config, &rgbConfig, pdMS_TO_TICKS(200));
+
+    // Write settings.json on first boot / whenever it's missing on the SD card.
+    // This ensures the file is always up to date even before the user changes anything.
+    saveConfigToSD();
 
     connectWiFi();
 
@@ -128,6 +148,8 @@ void tCodeServerTask(void *pvParameters)
     server.on("/SET_DISPLAY", HandleSetDisplay);
     server.on("/SD_LIST", HandleSdList);
     server.on("/SD_FILE", HandleSdFile);
+    server.on("/SD_DELETE", HandleSdDelete);
+    server.on("/SD_UPLOAD", HTTP_POST, HandleSdUpload, HandleSdUploadFile);
     server.on("/SET_ANIM", HandleSetAnim);
     server.on("/SET_WEATHER", HandleSetWeather);
     server.begin();
@@ -223,6 +245,10 @@ void SendXML()
         "<CPU>%u</CPU>"
         "<CHIP>%s</CHIP>"
         "<RGBM>%u</RGBM>"
+        "<RGBR>%u</RGBR>"
+        "<RGBG>%u</RGBG>"
+        "<RGBB>%u</RGBB>"
+        "<RGBBR>%u</RGBBR>"
         "<DPINT>%u</DPINT>"
         "<DPBR>%u</DPBR>"
         "<SLIDE>%u</SLIDE>"
@@ -246,6 +272,10 @@ void SendXML()
         (unsigned)ESP.getCpuFreqMHz(),
         ESP.getChipModel(),
         (unsigned)rgbConfig.rgbMode,
+        (unsigned)rgbConfig.rgbR,
+        (unsigned)rgbConfig.rgbG,
+        (unsigned)rgbConfig.rgbB,
+        (unsigned)rgbConfig.rgbBrigthness,
         (unsigned)systemConfig.displayIntervalSec,
         (unsigned)systemConfig.displayBrightness,
         (unsigned)systemConfig.slideshowEnabled,
@@ -275,6 +305,7 @@ void HandleSetNTP()
     prefs.putString("ntp", systemConfig.ntpServer);
     prefs.putInt("utc", systemConfig.utcOffset);
     prefs.end();
+    saveConfigToSD();
     server.send(200, "text/plain", "OK");
 }
 
@@ -297,6 +328,7 @@ void HandleSetRGB()
     prefs.putUChar("rgb_b",   rgbConfig.rgbB);
     prefs.putUChar("rgb_br",  rgbConfig.rgbBrigthness);
     prefs.end();
+    saveConfigToSD();
     server.send(200, "text/plain", "OK");
 }
 
@@ -318,23 +350,46 @@ void HandleSetWeather()
     Serial.printf("[WEATHER] config: en=%d city=%s lat=%.4f lon=%.4f\n",
         systemConfig.weatherEnabled, systemConfig.weatherCity,
         systemConfig.weatherLat, systemConfig.weatherLon);
+    saveConfigToSD();
     server.send(200, "text/plain", "OK");
 }
 
 void HandleSetDisplay()
 {
-    systemConfig.displayIntervalSec = (uint16_t)server.arg("INTERVAL").toInt();
-    systemConfig.displayBrightness  = (uint16_t)server.arg("BRIGHT").toInt();
-    if (server.hasArg("SLIDE")) systemConfig.slideshowEnabled  = server.arg("SLIDE").toInt() != 0;
-    if (server.hasArg("CAL"))   systemConfig.calendarEnabled   = server.arg("CAL").toInt()   != 0;
-    if (server.hasArg("BG"))    systemConfig.backgroundEnabled = server.arg("BG").toInt()    != 0;
+    if (server.hasArg("INTERVAL")) systemConfig.displayIntervalSec = (uint16_t)server.arg("INTERVAL").toInt();
+    if (server.hasArg("BRIGHT"))   systemConfig.displayBrightness  = (uint16_t)server.arg("BRIGHT").toInt();
+    if (server.hasArg("SLIDE"))    systemConfig.slideshowEnabled   = server.arg("SLIDE").toInt() != 0;
+    if (server.hasArg("CAL"))      systemConfig.calendarEnabled    = server.arg("CAL").toInt()   != 0;
+    if (server.hasArg("BG"))       systemConfig.backgroundEnabled  = server.arg("BG").toInt()    != 0;
+
+    // Clock foreground/background colour settings
+    if (server.hasArg("CFR")) systemConfig.clockFgR = (uint8_t)server.arg("CFR").toInt();
+    if (server.hasArg("CFG")) systemConfig.clockFgG = (uint8_t)server.arg("CFG").toInt();
+    if (server.hasArg("CFB")) systemConfig.clockFgB = (uint8_t)server.arg("CFB").toInt();
+    if (server.hasArg("CBR")) systemConfig.clockBgR = (uint8_t)server.arg("CBR").toInt();
+    if (server.hasArg("CBG")) systemConfig.clockBgG = (uint8_t)server.arg("CBG").toInt();
+    if (server.hasArg("CBB")) systemConfig.clockBgB = (uint8_t)server.arg("CBB").toInt();
+
+    // Apply brightness to hardware immediately
+    if (server.hasArg("BRIGHT")) {
+        Serial.printf("[DISPLAY] brightness set via web: %u\n", systemConfig.displayBrightness);
+        pca9685_setAllChannels(systemConfig.displayBrightness);
+    }
+
     prefs.begin("nixie", false);
-    prefs.putUShort("dp_int",  systemConfig.displayIntervalSec);
-    prefs.putUShort("dp_br",   systemConfig.displayBrightness);
-    prefs.putUChar("dp_slide", systemConfig.slideshowEnabled  ? 1 : 0);
-    prefs.putUChar("dp_cal",   systemConfig.calendarEnabled   ? 1 : 0);
-    prefs.putUChar("dp_bg",    systemConfig.backgroundEnabled ? 1 : 0);
+    prefs.putUShort("dp_int",   systemConfig.displayIntervalSec);
+    prefs.putUShort("dp_br",    systemConfig.displayBrightness);
+    prefs.putUChar("dp_slide",  systemConfig.slideshowEnabled  ? 1 : 0);
+    prefs.putUChar("dp_cal",    systemConfig.calendarEnabled   ? 1 : 0);
+    prefs.putUChar("dp_bg",     systemConfig.backgroundEnabled ? 1 : 0);
+    prefs.putUChar("cl_fg_r",   systemConfig.clockFgR);
+    prefs.putUChar("cl_fg_g",   systemConfig.clockFgG);
+    prefs.putUChar("cl_fg_b",   systemConfig.clockFgB);
+    prefs.putUChar("cl_bg_r",   systemConfig.clockBgR);
+    prefs.putUChar("cl_bg_g",   systemConfig.clockBgG);
+    prefs.putUChar("cl_bg_b",   systemConfig.clockBgB);
     prefs.end();
+    saveConfigToSD();
     server.send(200, "text/plain", "OK");
 }
 
@@ -522,6 +577,224 @@ void HandleSetAnim()
         prefs.begin("nixie", false);
         prefs.putUChar("anim_m", systemConfig.bootAnimMode);
         prefs.end();
+        saveConfigToSD();
     }
     server.send(200, "text/plain", "OK");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SD helper: acquire / release SPI bus for SD access
+// ═══════════════════════════════════════════════════════════════════════════
+
+static bool sdAcquireBus()
+{
+    // Use a generous timeout: display task holds SPI for up to ~100ms per frame
+    if (xSemaphoreTakeRecursive(xSpiMutex, pdMS_TO_TICKS(8000)) != pdTRUE) return false;
+    digitalWrite(TFT_CS_0, HIGH);
+    digitalWrite(TFT_CS_1, HIGH);
+    digitalWrite(TFT_CS_2, HIGH);
+    digitalWrite(TFT_CS_3, HIGH);
+    digitalWrite(TFT_CS_4, HIGH);
+    SPI.end();
+    digitalWrite(SD_BUF_OE, LOW);
+    delayMicroseconds(2);
+    return true;
+}
+
+static void sdReleaseBus()
+{
+    digitalWrite(SD_BUF_OE, HIGH);
+    SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);
+    xSemaphoreGiveRecursive(xSpiMutex);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// saveConfigToSD – write all settings as /settings.json on the SD card
+// ═══════════════════════════════════════════════════════════════════════════
+
+void saveConfigToSD()
+{
+    if (!systemConfig.sdCardDetected) return;
+    if (!sdAcquireBus()) {
+        Serial.println("[CFG] saveConfigToSD: mutex timeout");
+        return;
+    }
+
+    // No subdirectory needed – file lives in the root
+    FsFile f = sdCard.open("/settings.json", O_WRONLY | O_CREAT | O_TRUNC);
+    if (!f) {
+        Serial.println("[CFG] saveConfigToSD: cannot open file");
+        sdReleaseBus();
+        return;
+    }
+
+    // Build JSON – ArduinoJson v6
+    StaticJsonDocument<1024> doc;
+
+    JsonObject sys = doc.createNestedObject("system");
+    sys["ntp"]       = systemConfig.ntpServer;
+    sys["utc"]       = systemConfig.utcOffset;
+    sys["dp_br"]     = systemConfig.displayBrightness;
+    sys["dp_int"]    = systemConfig.displayIntervalSec;
+    sys["dp_slide"]  = systemConfig.slideshowEnabled;
+    sys["dp_cal"]    = systemConfig.calendarEnabled;
+    sys["dp_bg"]     = systemConfig.backgroundEnabled;
+    sys["anim_m"]    = systemConfig.bootAnimMode;
+    sys["wt_en"]     = systemConfig.weatherEnabled;
+    sys["wt_city"]   = systemConfig.weatherCity;
+    sys["wt_lat"]    = serialized(String(systemConfig.weatherLat, 4));
+    sys["wt_lon"]    = serialized(String(systemConfig.weatherLon, 4));
+    JsonArray clFg = sys.createNestedArray("cl_fg");
+    clFg.add(systemConfig.clockFgR);
+    clFg.add(systemConfig.clockFgG);
+    clFg.add(systemConfig.clockFgB);
+    JsonArray clBg = sys.createNestedArray("cl_bg");
+    clBg.add(systemConfig.clockBgR);
+    clBg.add(systemConfig.clockBgG);
+    clBg.add(systemConfig.clockBgB);
+
+    JsonObject rgb = doc.createNestedObject("rgb");
+    rgb["mode"] = rgbConfig.rgbMode;
+    rgb["r"]    = rgbConfig.rgbR;
+    rgb["g"]    = rgbConfig.rgbG;
+    rgb["b"]    = rgbConfig.rgbB;
+    rgb["br"]   = rgbConfig.rgbBrigthness;
+
+    // Write via a small char buffer to stay heap-friendly
+    char jsonBuf[1100];
+    size_t len = serializeJsonPretty(doc, jsonBuf, sizeof(jsonBuf));
+    f.write((const uint8_t*)jsonBuf, len);
+    f.close();
+
+    sdReleaseBus();
+    Serial.printf("[CFG] saveConfigToSD: %u bytes written\n", (unsigned)len);
+
+    // Keep the RAM file cache in sync so the SD browser shows the file.
+    // Look for an existing entry; add one if not found.
+    {
+        const char* SETTINGS_PATH = "/settings.json";
+        const char* SETTINGS_NAME = "settings.json";
+        bool found = false;
+        for (int i = 0; i < sdFileCacheCount; i++) {
+            if (strcmp(sdFileCache[i].path, SETTINGS_PATH) == 0) {
+                sdFileCache[i].size = (uint32_t)len;
+                found = true;
+                break;
+            }
+        }
+        if (!found && sdFileCacheCount < SD_CACHE_MAX) {
+            SdCacheEntry& e = sdFileCache[sdFileCacheCount++];
+            strncpy(e.path, SETTINGS_PATH, sizeof(e.path) - 1);
+            e.path[sizeof(e.path) - 1] = '\0';
+            strncpy(e.name, SETTINGS_NAME, sizeof(e.name) - 1);
+            e.name[sizeof(e.name) - 1] = '\0';
+            e.isDir = false;
+            e.size  = (uint32_t)len;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HandleSdDelete – DELETE /SD_DELETE?path=/pict/img.jpg
+// ═══════════════════════════════════════════════════════════════════════════
+
+void HandleSdDelete()
+{
+    if (!systemConfig.sdCardDetected || !server.hasArg("path")) {
+        server.send(400, "text/plain", "Bad request");
+        return;
+    }
+    String path = server.arg("path");
+    Serial.printf("[SD_DELETE] %s\n", path.c_str());
+
+    if (!sdAcquireBus()) {
+        server.send(503, "text/plain", "Busy");
+        return;
+    }
+
+    bool ok = sdCard.remove(path.c_str());
+
+    // Remove from RAM cache
+    if (ok) {
+        for (int i = 0; i < sdFileCacheCount; i++) {
+            if (strcmp(sdFileCache[i].path, path.c_str()) == 0) {
+                // Shift remaining entries left
+                for (int j = i; j < sdFileCacheCount - 1; j++) {
+                    sdFileCache[j] = sdFileCache[j + 1];
+                }
+                sdFileCacheCount--;
+                break;
+            }
+        }
+    }
+
+    sdReleaseBus();
+    Serial.printf("[SD_DELETE] result: %s\n", ok ? "OK" : "FAIL");
+    server.send(ok ? 200 : 500, "text/plain", ok ? "OK" : "Delete failed");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HandleSdUpload – POST /SD_UPLOAD  (multipart form-data)
+//   Form fields:  file=<binary>, dir=<target directory>
+// ═══════════════════════════════════════════════════════════════════════════
+
+static FsFile   s_uploadFile;
+static String   s_uploadPath;
+static bool     s_uploadOk = false;
+
+void HandleSdUpload()
+{
+    if (s_uploadOk) {
+        // Add new file to RAM cache if there is room
+        if (sdFileCacheCount < SD_CACHE_MAX) {
+            SdCacheEntry& e = sdFileCache[sdFileCacheCount++];
+            strlcpy(e.path, s_uploadPath.c_str(), sizeof(e.path));
+            // Extract name from path
+            const char* slash = strrchr(e.path, '/');
+            strlcpy(e.name, slash ? slash + 1 : e.path, sizeof(e.name));
+            e.isDir = false;
+            e.size  = (uint32_t)s_uploadFile.fileSize();  // already closed, size=0 – acceptable
+        }
+        server.send(200, "text/plain", "OK");
+    } else {
+        server.send(500, "text/plain", "Upload failed");
+    }
+    s_uploadOk = false;
+}
+
+void HandleSdUploadFile()
+{
+    HTTPUpload& upload = server.upload();
+
+    if (upload.status == UPLOAD_FILE_START) {
+        // Determine target directory from query arg
+        String dir = server.hasArg("dir") ? server.arg("dir") : String("/");
+        if (!dir.endsWith("/")) dir += '/';
+        s_uploadPath = dir + upload.filename;
+
+        Serial.printf("[SD_UPLOAD] start: %s\n", s_uploadPath.c_str());
+        s_uploadOk = false;
+
+        if (!sdAcquireBus()) return;
+
+        s_uploadFile = sdCard.open(s_uploadPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
+        if (!s_uploadFile) {
+            Serial.println("[SD_UPLOAD] open failed");
+            sdReleaseBus();
+            return;
+        }
+        s_uploadOk = true;
+
+    } else if (upload.status == UPLOAD_FILE_WRITE) {
+        if (s_uploadFile) {
+            s_uploadFile.write(upload.buf, upload.currentSize);
+        }
+
+    } else if (upload.status == UPLOAD_FILE_END) {
+        if (s_uploadFile) {
+            s_uploadFile.close();
+            sdReleaseBus();
+            Serial.printf("[SD_UPLOAD] done: %u bytes\n", upload.totalSize);
+        }
+    }
 }

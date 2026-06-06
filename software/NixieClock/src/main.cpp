@@ -8,7 +8,7 @@
 #include <Fonts/FreeMonoBoldOblique24pt7b.h>
 #include <Fonts/FreeSerif9pt7b.h>
 
-#include <Bonezegei_PCA9685.h>
+#include "pca9685.h"
 
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
@@ -31,9 +31,11 @@
 #include "icon\sd_card.h"
 #include "icon\WLAN.h"
 
+#include <Wire.h>
 #include <common.h>
 #include <Preferences.h>
 #include <vTask_rgb.h>
+#include "vTask_pca9538.h"
 #include <vTask_uart.h>
 #include "vTask_WebServer.h"
 #include "bootAnim.h"
@@ -47,9 +49,6 @@
 /**************************** */
 /*** LOCAL VARIABLES      *** */
 /**************************** */
-
-// Default Address of PCA9685 = 0x40
-Bonezegei_PCA9685 expander(0x41);
 
 //SPIClass sdSPI = SPIClass(VSPI);
 SdFs sdCard;
@@ -81,6 +80,7 @@ systemConfigStruct systemConfig;
 clockConfiguration clockConfig;
 
 SemaphoreHandle_t xSpiMutex = NULL;  // shared SPI bus mutex
+SemaphoreHandle_t xI2cMutex = NULL;  // shared I2C (Wire) bus mutex
 volatile bool bootInitDone = false;
 weatherDataStruct weatherData = {};
 
@@ -858,18 +858,15 @@ void setup(void)
     pinMode(TFT_RESET, OUTPUT);
     displayRESET(TFT_RESET);
 
-    /* DISPLAY HINTERGRUNDBELUCHTUNG */
-    if (expander.begin() == 0)
-    {
-        Serial.println("Error PCA9685 not Connected");
-    }
+    // I2C bus – shared by PCA9685 (backlight) and PCA9538A (button expander)
+    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+    Wire.setClock(100000);   // 100 kHz – reliable on this PCB; 400kHz causes bus lockup
 
-    expander.setOutputMode(true);
-    expander.setValue(0, 0xFFF);
-    expander.setValue(1, 0xFFF);
-    expander.setValue(2, 0xFFF);
-    expander.setValue(3, 0xFFF);
-    expander.setValue(4, 0xFFF);
+    /* DISPLAY HINTERGRUNDBELUCHTUNG – PCA9685 16-ch 12-bit PWM driver */
+    if (!pca9685_begin())
+    {
+        Serial.println("Error PCA9685 not connected!");
+    }
 
     Serial.print("--> Init BackLigth time: "); Serial.println( millis());
 
@@ -1024,6 +1021,8 @@ void setup(void)
     }
 
     xSpiMutex = xSemaphoreCreateRecursiveMutex();
+    xI2cMutex = xSemaphoreCreateMutex();
+    if (!xI2cMutex) Serial.println("ERROR: xI2cMutex creation failed!");
 
     xTaskCreate(
         tCodeServerTask, /* Task function. */
@@ -1050,6 +1049,15 @@ void setup(void)
         NULL,           /* parameter of the task */
         2,              /* priority of the task */
         &task_Uart      /* Task handle to keep track of created task */
+    );
+
+    xTaskCreate(
+        vTask_PCA9538,  /* Task function. */
+        "TaskPCA9538",  /* name of task. */
+        4096,           /* Stack size of task */
+        NULL,           /* parameter of the task */
+        2,              /* priority of the task */
+        NULL            /* Task handle */
     );
 
     BaseType_t dispResult = xTaskCreate(
@@ -1112,17 +1120,11 @@ void tCodeDisplay(void *pvParameters)
             vTaskDelay(pdMS_TO_TICKS(100));
     }
 
-    // Kurze Statusanzeige nach Animation
-    xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
-    drawSystem();
-    xSemaphoreGiveRecursive(xSpiMutex);
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    // Direkt in den Hauptloop – kein Delay, kein System-Overlay nach Animation
 
     // Anzeigestate und Dirty-Flags
     bool showWeather = false;
-    unsigned long lastInfoSwitch  = millis();
-    unsigned long lastSystemDraw  = millis();
-    const unsigned long SYSTEM_INTERVAL = 300000UL;  // System-Info alle 5 min
+    unsigned long lastInfoSwitch = millis();
 
     // "Zuletzt gezeichnet"-Werte zum Dirty-Check
     uint8_t  drawn_hour = 0xFF, drawn_min = 0xFF;
@@ -1181,18 +1183,6 @@ void tCodeDisplay(void *pvParameters)
             }
 
             xSemaphoreGiveRecursive(xSpiMutex);
-        }
-
-        // System-Info periodisch zeigen
-        if (millis() - lastSystemDraw >= SYSTEM_INTERVAL) {
-            xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
-            drawSystem();
-            xSemaphoreGiveRecursive(xSpiMutex);
-            vTaskDelay(pdMS_TO_TICKS(3000));
-            lastSystemDraw = millis();
-            // Alles als dirty markieren damit nach System-Info neu gezeichnet wird
-            drawn_hour = 0xFF;
-            drawn_showWeather = !showWeather;
         }
 
         vTaskDelay(pdMS_TO_TICKS(200));

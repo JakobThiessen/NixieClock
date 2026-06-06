@@ -29,7 +29,8 @@ Multi-display clock firmware for an ESP32-based Nixie-style clock with five TFT 
 | **Display 0** | Adafruit ST7735 – 1,8" TFT, 160×128 px (Info-/Status-Display) |
 | **Display 1–4** | Adafruit ST7789 – 1,14" TFT, 240×135 px (Ziffern-Displays) |
 | **LED-Strip** | WS2812B NeoPixel, 32 LEDs, an GPIO 33 |
-| **Display-Backlight** | PCA9685 PWM-Controller (I²C, Adresse `0x41`), Kanäle 0–4 |
+| **Display-Backlight** | PCA9685 PWM-Controller (I²C, Adresse `0x40`–`0x7F` auto-scan), Kanäle 0–4 |
+| **Button-Expander** | PCA9538A GPIO-Expander (I²C, `0x70`), IO0 = DIM, IO1 = BRIGHT |
 | **SD-Karte** | SPI, FAT32/exFAT (via SdFat-Adafruit-Fork) |
 
 ---
@@ -75,6 +76,14 @@ Multi-display clock firmware for an ESP32-based Nixie-style clock with five TFT 
 | ADC_0_PIN | 36 | ADC1 Kanal 0 |
 | ADC_3_PIN | 39 | ADC1 Kanal 3 |
 
+### I²C-Bus
+
+| Signal | GPIO | Beschreibung |
+|---|---|---|
+| I2C_SDA | 21 | I²C-Datenleitung |
+| I2C_SCL | 22 | I²C-Takt (100 kHz) |
+| INT_IO_PIN | 34 | PCA9538A Interrupt (Eingang, active-LOW) |
+
 ---
 
 ## Software-Voraussetzungen
@@ -88,9 +97,9 @@ Multi-display clock firmware for an ESP32-based Nixie-style clock with five TFT 
 |---|---|---|
 | Adafruit GFX Library | ^1.11.10 | Grafik-Grundfunktionen |
 | Adafruit ST7735 and ST7789 Library | ^1.10.4 | TFT-Treiber |
-| Bonezegei_PCA9685 | ^1.0.0 | Backlight-PWM |
 | Adafruit NeoPixel | ^1.12.3 | WS2812B LED-Strip |
 | SdFat – Adafruit Fork | ^2.2.3 | SD-Karte |
+| ArduinoJson | ^6.x | JSON für settings.json |
 | WebServer | (ESP32 built-in) | HTTP-Server |
 | Preferences | (ESP32 built-in) | NVS-Persistenz |
 | WiFi | (ESP32 built-in) | WLAN-Verbindung |
@@ -185,18 +194,23 @@ Das Interface hat drei Tabs:
 
 ### Tab: NeoPixel
 - Betriebsmodus wählen (Aus / Statisch / Regenbogen / Atmen / Farbwechsel)
-- Farbe per Farbwähler
+- Farbe per Farbwähler (wird beim Seitenladen aus dem Gerät geladen)
 - Helligkeit (0–255)
 
 ### Tab: Display
 - Anzeigedauer je Bild (Sekunden)
-- Display-Helligkeit (0–4095, über PCA9685)
-- **Anzeige-Optionen:**
-  - Bilderwechsel (Dia-Show) An/Aus
-  - Kalender An/Aus
-  - Hintergrundbild An/Aus
+- Display-Helligkeit (0–4095, über PCA9685 PWM-Controller)
+- **Anzeige-Optionen:** Bilderwechsel / Kalender / Hintergrundbild An/Aus
 
-Alle Einstellungen werden beim Klick auf **Speichern** dauerhaft im NVS gespeichert und beim nächsten Neustart automatisch wiederhergestellt.
+### Tab: SD-Karte
+- Verzeichnis-Browser (Ordner navigierbar, Dateien löschbar)
+- Datei-Upload per Drag & Drop oder Dateiauswahl
+- Vorschau von JSON- und Textdateien
+- Zeigt auch die automatisch erzeugte `settings.json`
+
+Alle Einstellungen werden beim Klick auf **Speichern** dauerhaft gespeichert:
+- **NVS** (ESP32-interner Flash) – Primärspeicher, bleibt auch ohne SD erhalten
+- **`/settings.json`** auf der SD-Karte – lesbare Sicherungskopie, wird beim Start und nach jeder Änderung automatisch aktualisiert
 
 ---
 
@@ -223,6 +237,10 @@ Liefert den aktuellen Systemstatus als XML (wird vom Web-Interface alle 2 Sekund
   <CPU>240</CPU>
   <CHIP>ESP32-D0WDQ6</CHIP>
   <RGBM>1</RGBM>            <!-- NeoPixel-Modus 0–4 -->
+  <RGBR>255</RGBR>          <!-- NeoPixel Rot 0–255 -->
+  <RGBG>102</RGBG>          <!-- NeoPixel Grün 0–255 -->
+  <RGBB>0</RGBB>            <!-- NeoPixel Blau 0–255 -->
+  <RGBBR>128</RGBBR>        <!-- NeoPixel Helligkeit 0–255 -->
   <DPINT>5</DPINT>          <!-- Anzeigedauer je Bild (s) -->
   <DPBR>4095</DPBR>         <!-- Display-Helligkeit 0–4095 -->
   <SLIDE>0</SLIDE>          <!-- Bilderwechsel: 1=An -->
@@ -305,6 +323,13 @@ Alle Einstellungen werden im ESP32-NVS (Non-Volatile Storage) unter dem Namespac
 | `dp_slide` | UChar | Bilderwechsel (0/1) | `0` |
 | `dp_cal` | UChar | Kalender (0/1) | `1` |
 | `dp_bg` | UChar | Hintergrundbild (0/1) | `0` |
+| `anim_m` | UChar | Boot-Animations-Modus | `0` |
+| `wt_en` | UChar | Wetter aktiviert (0/1) | `0` |
+| `wt_city` | String | Wetterstadt | `` |
+| `wt_lat` | Float | Breitengrad | `0.0` |
+| `wt_lon` | Float | Längengrad | `0.0` |
+| `cl_fg_r/g/b` | UChar | Uhr Vordergrundfarbe RGB | `255/255/255` |
+| `cl_bg_r/g/b` | UChar | Uhr Hintergrundfarbe RGB | `0/0/0` |
 
 NVS zurücksetzen (alle gespeicherten Werte löschen):
 ```cpp
@@ -336,20 +361,26 @@ platformio run --target erase
 
 ## FreeRTOS-Tasks
 
-| Task | Funktion | Kern | Priorität | Stack |
-|---|---|---|---|---|
-| `tCodeServerTask` | WiFi-Verbindung + HTTP-WebServer | — | 3 | 80 000 B |
-| `tCodeRGB` | NeoPixel-LED-Steuerung | — | 3 | 5 000 B |
-| `tCodeUart` | UART-Kommunikation | — | 2 | 5 000 B |
-| `tCodeDisplay` | Display-Ausgabe (Uhr, Kalender, Status) | — | 1 | 80 000 B |
+| Task | Funktion | Priorität | Stack |
+|---|---|---|---|
+| `tCodeServerTask` | WiFi + HTTP-WebServer + Einstellungen | 3 | 80 000 B |
+| `tCodeRGB` | NeoPixel WS2812B Steuerung | 3 | 5 000 B |
+| `tCodeUart` | UART-Kommunikation | 2 | 5 000 B |
+| `vTask_PCA9538` | PCA9538A Tasten-Expander (Helligkeit DIM/BRIGHT) | 2 | 4 096 B |
+| `tCodeDisplay` | Display-Ausgabe (Uhr, Kalender, Status) | 1 | 40 000 B |
+
+**I²C-Bus-Schutz:** Alle I²C-Zugriffe (PCA9685 + PCA9538A) sind durch `xI2cMutex` geschützt.
+**SPI-Bus-Schutz:** Alle SPI-Zugriffe (5× TFT + SD) sind durch `xSpiMutex` (rekursiv) geschützt.
 
 **Startsequenz `tCodeServerTask`:**
 1. Preferences laden (NVS → globale Structs)
-2. Geladene RGB-Konfiguration in Queue senden (damit RGB-Task sofort startet)
-3. WiFi verbinden
-4. NTP konfigurieren (`configTzTime`)
-5. HTTP-Routen registrieren + `server.begin()`
-6. Loop: `server.handleClient()` alle 10 ms
+2. Display-Helligkeit auf PCA9685 anwenden
+3. Geladene RGB-Konfiguration in Queue senden (damit RGB-Task sofort startet)
+4. `settings.json` auf SD-Karte schreiben (Sicherungskopie der aktuellen Einstellungen)
+5. WiFi verbinden
+6. NTP konfigurieren (`configTzTime`)
+7. HTTP-Routen registrieren + `server.begin()`
+8. Loop: `server.handleClient()` alle 10 ms
 
 **Kommunikation zwischen Tasks:**
 
@@ -375,9 +406,11 @@ NixieClock/
 │   ├── common.h                # Pin-Defines, Structs, Externs (geteilt von allen Tasks)
 │   ├── credentials.h           # ⚠ NICHT in Git – echte WLAN-Daten (siehe .gitignore)
 │   ├── credentials.h.example   # Vorlage für credentials.h (wird committed)
-│   ├── vTask_WebServer.cpp/.h  # WiFi, HTTP-Server, Preferences
+│   ├── vTask_WebServer.cpp/.h  # WiFi, HTTP-Server, Einstellungen, SD-Upload/Delete
 │   ├── vTask_rgb.cpp/.h        # NeoPixel WS2812B Steuerung
 │   ├── vTask_uart.cpp/.h       # UART-Task
+│   ├── vTask_pca9538.cpp/.h    # PCA9538A Tasten-Treiber (DIM/BRIGHT Buttons)
+│   ├── pca9685.h / pca9685.cpp # PCA9685 12-bit PWM Backlight-Treiber
 │   ├── WebPage.h               # HTML/CSS/JS der Web-UI (PROGMEM)
 │   ├── webPage.html            # Quelldatei der Web-UI (zur Entwicklung)
 │   ├── draw7Number.cpp         # 7-Segment-Zifferzeichnung für TFT
