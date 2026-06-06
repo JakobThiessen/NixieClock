@@ -21,6 +21,7 @@ extern SdFs sdCard;
 extern SoftSpiDriver<TFT_MISO, TFT_MOSI, TFT_CLK> softSpi;
 extern SemaphoreHandle_t xSpiMutex;
 extern volatile bool bootInitDone;
+extern void scanSdCache(const char* dirPath);   // defined in main.cpp
 extern weatherDataStruct weatherData;
 
 char XML[4096];
@@ -48,8 +49,9 @@ void HandleSdDelete();
 void HandleSdUpload();
 void HandleSdUploadFile();
 void HandleSetAnim();
+void HandleSdRescan();
 void applyNTPConfig();
-void saveConfigToSD();
+bool saveConfigToSD();  // returns true on success
 
 void tCodeServerTask(void *pvParameters)
 {
@@ -128,10 +130,6 @@ void tCodeServerTask(void *pvParameters)
     // Push persisted RGB config into the queue so the RGB task starts with correct values
     xQueueSend(xQueue_RGB_Config, &rgbConfig, pdMS_TO_TICKS(200));
 
-    // Write settings.json on first boot / whenever it's missing on the SD card.
-    // This ensures the file is always up to date even before the user changes anything.
-    saveConfigToSD();
-
     connectWiFi();
 
     // Apply NTP config after WiFi is connected (needs DNS)
@@ -147,6 +145,7 @@ void tCodeServerTask(void *pvParameters)
     server.on("/SET_RGB", HandleSetRGB);
     server.on("/SET_DISPLAY", HandleSetDisplay);
     server.on("/SD_LIST", HandleSdList);
+    server.on("/SD_RESCAN", HandleSdRescan);
     server.on("/SD_FILE", HandleSdFile);
     server.on("/SD_DELETE", HandleSdDelete);
     server.on("/SD_UPLOAD", HTTP_POST, HandleSdUpload, HandleSdUploadFile);
@@ -154,6 +153,8 @@ void tCodeServerTask(void *pvParameters)
     server.on("/SET_WEATHER", HandleSetWeather);
     server.begin();
     Serial.print("--> Init WebServer OK: "); Serial.println(millis());
+
+    bool pendingSettingsSave = true;  // write settings.json on the first loop iteration
 
     for (;;)
     {
@@ -167,6 +168,13 @@ void tCodeServerTask(void *pvParameters)
         }
 
         server.handleClient();
+
+        // Deferred first-boot settings write: runs after the display task has had
+        // time to release the SPI bus (typically within the first few loop ticks).
+        if (pendingSettingsSave && systemConfig.sdCardDetected) {
+            if (saveConfigToSD()) pendingSettingsSave = false;
+        }
+
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
@@ -608,24 +616,77 @@ static void sdReleaseBus()
     xSemaphoreGiveRecursive(xSpiMutex);
 }
 
+// Re-initialize the SD card after it loses state due to SPI bus switches.
+// Must be called while the bus is already acquired (SD_BUF_OE LOW, mutex held).
+static bool sdReinit()
+{
+    Serial.println("[SD] reinit...");
+    sdCard.end();
+    // Manual pin reset so SoftSpiDriver can take over cleanly
+    pinMode(TFT_CLK,  OUTPUT);       digitalWrite(TFT_CLK,  LOW);
+    pinMode(TFT_MOSI, OUTPUT);       digitalWrite(TFT_MOSI, HIGH);
+    pinMode(TFT_MISO, INPUT_PULLUP);
+    pinMode(SD_CS,    OUTPUT);       digitalWrite(SD_CS,    HIGH);
+    delay(100);
+    bool ok = sdCard.begin(SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(0), &softSpi));
+    Serial.printf("[SD] reinit %s (err=0x%02X)\n", ok ? "OK" : "FAIL",
+                  ok ? 0 : (int)sdCard.sdErrorCode());
+    return ok;
+}
+
+// ─── SD_RESCAN: rebuild the RAM file cache from the actual SD card ────────────
+// Called by the refresh button. Full recursive scan so any file written since
+// boot (settings.json, uploads) is visible immediately.
+void HandleSdRescan()
+{
+    if (!systemConfig.sdCardDetected) {
+        server.send(503, "text/plain", "No SD");
+        return;
+    }
+    if (!sdAcquireBus()) {
+        server.send(503, "text/plain", "Busy");
+        return;
+    }
+    // Reinit first so a stale SD state doesn't yield an empty scan
+    sdReinit();
+    sdFileCacheCount = 0;
+    scanSdCache("/");
+    int found = sdFileCacheCount;
+    sdReleaseBus();
+    Serial.printf("[SD_RESCAN] done, %d entries\n", found);
+    server.send(200, "text/plain", String(found));
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // saveConfigToSD – write all settings as /settings.json on the SD card
 // ═══════════════════════════════════════════════════════════════════════════
 
-void saveConfigToSD()
+// Returns true if the file was written successfully.
+bool saveConfigToSD()
 {
-    if (!systemConfig.sdCardDetected) return;
+    if (!systemConfig.sdCardDetected) return false;
     if (!sdAcquireBus()) {
         Serial.println("[CFG] saveConfigToSD: mutex timeout");
-        return;
+        return false;
     }
 
-    // No subdirectory needed – file lives in the root
-    FsFile f = sdCard.open("/settings.json", O_WRONLY | O_CREAT | O_TRUNC);
+    // Delete any existing file first.
+    // SdFat2: O_CREAT|O_TRUNC on a non-existent file can fail with O_WRONLY
+    // on some SD cards/firmware versions. Remove + O_RDWR|O_CREAT is bulletproof.
+    sdCard.remove("/settings.json");
+
+    FsFile f = sdCard.open("/settings.json", O_RDWR | O_CREAT);
+    if (!f) {
+        Serial.println("[CFG] open failed – reinit SD and retry");
+        if (sdReinit()) {
+            sdCard.remove("/settings.json");
+            f = sdCard.open("/settings.json", O_RDWR | O_CREAT);
+        }
+    }
     if (!f) {
         Serial.println("[CFG] saveConfigToSD: cannot open file");
         sdReleaseBus();
-        return;
+        return false;
     }
 
     // Build JSON – ArduinoJson v6
@@ -692,6 +753,7 @@ void saveConfigToSD()
             e.size  = (uint32_t)len;
         }
     }
+    return true;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -714,11 +776,19 @@ void HandleSdDelete()
 
     bool ok = sdCard.remove(path.c_str());
 
-    // Remove from RAM cache
+    // If remove failed the SD is likely in an error state after a bus switch.
+    // Reinit and try once more.
+    if (!ok) {
+        Serial.println("[SD_DELETE] remove failed – reinit SD and retry");
+        if (sdReinit()) {
+            ok = sdCard.remove(path.c_str());
+        }
+    }
+
     if (ok) {
+        // Remove from RAM cache
         for (int i = 0; i < sdFileCacheCount; i++) {
             if (strcmp(sdFileCache[i].path, path.c_str()) == 0) {
-                // Shift remaining entries left
                 for (int j = i; j < sdFileCacheCount - 1; j++) {
                     sdFileCache[j] = sdFileCache[j + 1];
                 }
@@ -740,26 +810,26 @@ void HandleSdDelete()
 
 static FsFile   s_uploadFile;
 static String   s_uploadPath;
-static bool     s_uploadOk = false;
+static bool     s_uploadOk    = false;
+static bool     s_busAcquired = false;
+static uint32_t s_uploadWritten = 0;   // bytes successfully written so far
 
 void HandleSdUpload()
 {
     if (s_uploadOk) {
-        // Add new file to RAM cache if there is room
-        if (sdFileCacheCount < SD_CACHE_MAX) {
-            SdCacheEntry& e = sdFileCache[sdFileCacheCount++];
-            strlcpy(e.path, s_uploadPath.c_str(), sizeof(e.path));
-            // Extract name from path
-            const char* slash = strrchr(e.path, '/');
-            strlcpy(e.name, slash ? slash + 1 : e.path, sizeof(e.name));
-            e.isDir = false;
-            e.size  = (uint32_t)s_uploadFile.fileSize();  // already closed, size=0 – acceptable
+        // Update file size in cache entry that HandleSdUploadFile already added
+        for (int i = 0; i < sdFileCacheCount; i++) {
+            if (strcmp(sdFileCache[i].path, s_uploadPath.c_str()) == 0) {
+                // size was added at UPLOAD_FILE_END, nothing more to do
+                break;
+            }
         }
         server.send(200, "text/plain", "OK");
     } else {
         server.send(500, "text/plain", "Upload failed");
     }
-    s_uploadOk = false;
+    s_uploadOk    = false;
+    s_busAcquired = false;
 }
 
 void HandleSdUploadFile()
@@ -770,31 +840,91 @@ void HandleSdUploadFile()
         // Determine target directory from query arg
         String dir = server.hasArg("dir") ? server.arg("dir") : String("/");
         if (!dir.endsWith("/")) dir += '/';
-        s_uploadPath = dir + upload.filename;
+        s_uploadPath  = dir + upload.filename;
+        s_uploadOk    = false;
+        s_busAcquired = false;
 
         Serial.printf("[SD_UPLOAD] start: %s\n", s_uploadPath.c_str());
-        s_uploadOk = false;
 
-        if (!sdAcquireBus()) return;
+        if (!sdAcquireBus()) {
+            Serial.println("[SD_UPLOAD] sdAcquireBus failed");
+            return;  // s_busAcquired stays false; WRITE/END will skip safely
+        }
+        s_busAcquired = true;
 
-        s_uploadFile = sdCard.open(s_uploadPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
+        sdCard.remove(s_uploadPath.c_str());
+        s_uploadFile = sdCard.open(s_uploadPath.c_str(), O_RDWR | O_CREAT);
+        if (!s_uploadFile) {
+            Serial.println("[SD_UPLOAD] open failed – reinit SD and retry");
+            if (sdReinit()) {
+                sdCard.remove(s_uploadPath.c_str());
+                s_uploadFile = sdCard.open(s_uploadPath.c_str(), O_RDWR | O_CREAT);
+            }
+        }
         if (!s_uploadFile) {
             Serial.println("[SD_UPLOAD] open failed");
             sdReleaseBus();
+            s_busAcquired = false;
             return;
         }
-        s_uploadOk = true;
+        s_uploadOk      = true;
+        s_uploadWritten = 0;
 
     } else if (upload.status == UPLOAD_FILE_WRITE) {
-        if (s_uploadFile) {
-            s_uploadFile.write(upload.buf, upload.currentSize);
+        // Bus is still held from START
+        if (s_uploadFile && s_uploadOk) {
+            size_t written = s_uploadFile.write(upload.buf, upload.currentSize);
+            if (written != upload.currentSize) {
+                Serial.printf("[SD_UPLOAD] write ERROR: wanted %u got %u (total so far %u)\n",
+                              upload.currentSize, (unsigned)written, s_uploadWritten);
+                s_uploadOk = false;   // mark as failed; END will still close + release bus
+            } else {
+                s_uploadWritten += written;
+                // Sync every 32 KB so SdFat2 flushes its internal buffer to the card.
+                // Without this, large files (>~64 KB) can fail silently.
+                if (s_uploadWritten % (32 * 1024) < upload.currentSize) {
+                    s_uploadFile.sync();
+                }
+            }
         }
 
     } else if (upload.status == UPLOAD_FILE_END) {
         if (s_uploadFile) {
+            s_uploadFile.sync();   // flush remaining data before close
             s_uploadFile.close();
-            sdReleaseBus();
-            Serial.printf("[SD_UPLOAD] done: %u bytes\n", upload.totalSize);
+            if (s_uploadOk) {
+                // Add/update cache entry
+                bool found = false;
+                for (int i = 0; i < sdFileCacheCount; i++) {
+                    if (strcmp(sdFileCache[i].path, s_uploadPath.c_str()) == 0) {
+                        sdFileCache[i].size = upload.totalSize;
+                        found = true; break;
+                    }
+                }
+                if (!found && sdFileCacheCount < SD_CACHE_MAX) {
+                    SdCacheEntry& e = sdFileCache[sdFileCacheCount++];
+                    strlcpy(e.path, s_uploadPath.c_str(), sizeof(e.path));
+                    const char* slash = strrchr(e.path, '/');
+                    strlcpy(e.name, slash ? slash + 1 : e.path, sizeof(e.name));
+                    e.isDir = false;
+                    e.size  = upload.totalSize;
+                }
+                Serial.printf("[SD_UPLOAD] done: %u bytes written\n", s_uploadWritten);
+            } else {
+                // Write failed partway through – remove the incomplete file
+                sdCard.remove(s_uploadPath.c_str());
+                Serial.println("[SD_UPLOAD] FAILED – incomplete file removed");
+            }
         }
+        if (s_busAcquired) {
+            sdReleaseBus();
+            s_busAcquired = false;
+        }
+
+    } else if (upload.status == UPLOAD_FILE_ABORTED) {
+        if (s_uploadFile) { s_uploadFile.close(); }
+        if (s_busAcquired) { sdReleaseBus(); s_busAcquired = false; }
+        s_uploadOk = false;
+        Serial.println("[SD_UPLOAD] aborted");
     }
 }

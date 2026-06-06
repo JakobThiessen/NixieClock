@@ -52,7 +52,7 @@ extern "C" {
 #define I2C_SDA_PIN     21
 #define I2C_SCL_PIN     22
 
-#define FW_VERSION "4.8.5"
+#define FW_VERSION "5.0.0"
 #define FW_BUILD_DATE __DATE__
 #define FW_BUILD_TIME __TIME__
 
@@ -154,10 +154,10 @@ extern weatherDataStruct weatherData;
 }
 #endif
 
-// C++ only: saves all current settings as JSON to /sys/config.json on the SD card.
-// Thread-safe: takes xSpiMutex internally. No-op when SD is not present.
+// C++ only: saves all current settings as JSON to /settings.json on the SD card.
+// Thread-safe: takes xSpiMutex internally. Returns true on success. No-op if SD absent.
 #ifdef __cplusplus
-void saveConfigToSD();
+bool saveConfigToSD();
 #endif
 
 #endif /* COMMON_CONFIG_h */

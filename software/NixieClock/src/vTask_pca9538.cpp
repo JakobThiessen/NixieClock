@@ -8,7 +8,7 @@
 
 // ─── Externs (defined in main.cpp / vTask_WebServer.cpp) ────────────────────
 extern systemConfigStruct systemConfig;
-extern void               saveConfigToSD();
+extern bool               saveConfigToSD();
 
 // ─── Private helpers ─────────────────────────────────────────────────────────
 static TaskHandle_t s_taskHandle = NULL;
