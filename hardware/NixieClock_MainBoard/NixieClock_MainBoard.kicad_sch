@@ -1,13 +1,19 @@
 (kicad_sch
-	(version 20231120)
+	(version 20250114)
 	(generator "eeschema")
-	(generator_version "8.0")
+	(generator_version "9.0")
 	(uuid "5ddb5910-d1ea-4e23-971a-19156fc3bbe9")
 	(paper "A4")
+	(title_block
+		(date "2026-06-07")
+		(rev "2.1")
+	)
 	(lib_symbols
 		(symbol "Connector_Generic:Conn_01x08"
 			(pin_names
-				(offset 1.016) hide)
+				(offset 1.016)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -74,63 +80,19 @@
 			)
 			(symbol "Conn_01x08_1_1"
 				(rectangle
-					(start -1.27 -10.033)
-					(end 0 -10.287)
+					(start -1.27 8.89)
+					(end 1.27 -11.43)
 					(stroke
-						(width 0.1524)
+						(width 0.254)
 						(type default)
 					)
 					(fill
-						(type none)
+						(type background)
 					)
 				)
 				(rectangle
-					(start -1.27 -7.493)
-					(end 0 -7.747)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 -4.953)
-					(end 0 -5.207)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 -2.413)
-					(end 0 -2.667)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 0.127)
-					(end 0 -0.127)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 2.667)
-					(end 0 2.413)
+					(start -1.27 7.747)
+					(end 0 7.493)
 					(stroke
 						(width 0.1524)
 						(type default)
@@ -151,8 +113,8 @@
 					)
 				)
 				(rectangle
-					(start -1.27 7.747)
-					(end 0 7.493)
+					(start -1.27 2.667)
+					(end 0 2.413)
 					(stroke
 						(width 0.1524)
 						(type default)
@@ -162,14 +124,58 @@
 					)
 				)
 				(rectangle
-					(start -1.27 8.89)
-					(end 1.27 -11.43)
+					(start -1.27 0.127)
+					(end 0 -0.127)
 					(stroke
-						(width 0.254)
+						(width 0.1524)
 						(type default)
 					)
 					(fill
-						(type background)
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -2.413)
+					(end 0 -2.667)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -4.953)
+					(end 0 -5.207)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -7.493)
+					(end 0 -7.747)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -10.033)
+					(end 0 -10.287)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
 					)
 				)
 				(pin passive line
@@ -317,10 +323,13 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Connector_Generic:Conn_01x14"
 			(pin_names
-				(offset 1.016) hide)
+				(offset 1.016)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -387,129 +396,19 @@
 			)
 			(symbol "Conn_01x14_1_1"
 				(rectangle
-					(start -1.27 -17.653)
-					(end 0 -17.907)
+					(start -1.27 16.51)
+					(end 1.27 -19.05)
 					(stroke
-						(width 0.1524)
+						(width 0.254)
 						(type default)
 					)
 					(fill
-						(type none)
+						(type background)
 					)
 				)
 				(rectangle
-					(start -1.27 -15.113)
-					(end 0 -15.367)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 -12.573)
-					(end 0 -12.827)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 -10.033)
-					(end 0 -10.287)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 -7.493)
-					(end 0 -7.747)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 -4.953)
-					(end 0 -5.207)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 -2.413)
-					(end 0 -2.667)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 0.127)
-					(end 0 -0.127)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 2.667)
-					(end 0 2.413)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 5.207)
-					(end 0 4.953)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 7.747)
-					(end 0 7.493)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 10.287)
-					(end 0 10.033)
+					(start -1.27 15.367)
+					(end 0 15.113)
 					(stroke
 						(width 0.1524)
 						(type default)
@@ -530,8 +429,8 @@
 					)
 				)
 				(rectangle
-					(start -1.27 15.367)
-					(end 0 15.113)
+					(start -1.27 10.287)
+					(end 0 10.033)
 					(stroke
 						(width 0.1524)
 						(type default)
@@ -541,14 +440,124 @@
 					)
 				)
 				(rectangle
-					(start -1.27 16.51)
-					(end 1.27 -19.05)
+					(start -1.27 7.747)
+					(end 0 7.493)
 					(stroke
-						(width 0.254)
+						(width 0.1524)
 						(type default)
 					)
 					(fill
-						(type background)
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 5.207)
+					(end 0 4.953)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 2.667)
+					(end 0 2.413)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 0.127)
+					(end 0 -0.127)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -2.413)
+					(end 0 -2.667)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -4.953)
+					(end 0 -5.207)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -7.493)
+					(end 0 -7.747)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -10.033)
+					(end 0 -10.287)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -12.573)
+					(end 0 -12.827)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -15.113)
+					(end 0 -15.367)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -17.653)
+					(end 0 -17.907)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
 					)
 				)
 				(pin passive line
@@ -562,96 +571,6 @@
 						)
 					)
 					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -7.62 0)
-					(length 3.81)
-					(name "Pin_10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -10.16 0)
-					(length 3.81)
-					(name "Pin_11"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "11"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -12.7 0)
-					(length 3.81)
-					(name "Pin_12"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "12"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -15.24 0)
-					(length 3.81)
-					(name "Pin_13"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "13"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -17.78 0)
-					(length 3.81)
-					(name "Pin_14"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "14"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -803,10 +722,103 @@
 						)
 					)
 				)
+				(pin passive line
+					(at -5.08 -7.62 0)
+					(length 3.81)
+					(name "Pin_10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -10.16 0)
+					(length 3.81)
+					(name "Pin_11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -12.7 0)
+					(length 3.81)
+					(name "Pin_12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -15.24 0)
+					(length 3.81)
+					(name "Pin_13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -17.78 0)
+					(length 3.81)
+					(name "Pin_14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Device:R"
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0)
 			)
@@ -925,6 +937,7 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Mechanical:MountingHole"
 			(pin_names
@@ -1007,12 +1020,17 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "power:GND"
 			(power)
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
-				(offset 0) hide)
+				(offset 0)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1103,6 +1121,7 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 	)
 	(junction
@@ -2009,6 +2028,16 @@
 	)
 	(wire
 		(pts
+			(xy 88.9 114.3) (xy 105.41 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ba9a2d19-9d44-44e0-8294-760c6ba9b616")
+	)
+	(wire
+		(pts
 			(xy 123.19 67.31) (xy 139.7 67.31)
 		)
 		(stroke
@@ -2046,6 +2075,16 @@
 			(type default)
 		)
 		(uuid "bf6afb69-430a-42f9-8659-59164ea228cf")
+	)
+	(wire
+		(pts
+			(xy 124.46 123.19) (xy 139.7 123.19)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c0806f97-08d2-4d92-a8a3-c820577f7903")
 	)
 	(wire
 		(pts
@@ -2379,7 +2418,6 @@
 	)
 	(label "MISO"
 		(at 179.07 119.38 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2388,9 +2426,18 @@
 		)
 		(uuid "05cc72e6-43b2-4812-8341-7bfa0688e801")
 	)
+	(label "OE_MEM"
+		(at 129.54 123.19 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "06cded4f-ad90-406e-b430-0edf882e34b8")
+	)
 	(label "~{RESET}"
 		(at 222.25 133.35 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2401,7 +2448,6 @@
 	)
 	(label "SCLK"
 		(at 179.07 116.84 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2412,7 +2458,6 @@
 	)
 	(label "CS_3"
 		(at 179.07 104.14 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2423,7 +2468,6 @@
 	)
 	(label "SCLK"
 		(at 222.25 63.5 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2434,7 +2478,6 @@
 	)
 	(label "MOSI_4"
 		(at 177.8 72.39 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2445,7 +2488,6 @@
 	)
 	(label "EN"
 		(at 95.25 36.83 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2456,7 +2498,6 @@
 	)
 	(label "RS"
 		(at 222.25 104.14 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2467,7 +2508,6 @@
 	)
 	(label "RS"
 		(at 222.25 35.56 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2478,7 +2518,6 @@
 	)
 	(label "CS_0"
 		(at 179.07 96.52 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2489,7 +2528,6 @@
 	)
 	(label "MCU_TXD"
 		(at 95.25 31.75 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2500,7 +2538,6 @@
 	)
 	(label "DC"
 		(at 179.07 130.81 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2511,7 +2548,6 @@
 	)
 	(label "LED_PWM_3"
 		(at 167.64 38.1 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2522,7 +2558,6 @@
 	)
 	(label "SCLK"
 		(at 222.25 109.22 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2533,7 +2568,6 @@
 	)
 	(label "MCU_TXD"
 		(at 129.54 93.98 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2544,7 +2578,6 @@
 	)
 	(label "LED_PWM_0"
 		(at 167.64 30.48 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2555,7 +2588,6 @@
 	)
 	(label "MOSI_4"
 		(at 222.25 138.43 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2566,7 +2598,6 @@
 	)
 	(label "CS_0"
 		(at 222.25 45.72 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2577,7 +2608,6 @@
 	)
 	(label "~{RESET}"
 		(at 222.25 101.6 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2588,7 +2618,6 @@
 	)
 	(label "MOSI"
 		(at 95.25 106.68 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2599,7 +2628,6 @@
 	)
 	(label "MOSI_2"
 		(at 177.8 67.31 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2610,7 +2638,6 @@
 	)
 	(label "SCLK"
 		(at 222.25 140.97 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2621,7 +2648,6 @@
 	)
 	(label "VDD"
 		(at 222.25 43.18 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2632,7 +2658,6 @@
 	)
 	(label "EN"
 		(at 129.54 100.33 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2643,7 +2668,6 @@
 	)
 	(label "VDD"
 		(at 222.25 90.17 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2654,7 +2678,6 @@
 	)
 	(label "VCC"
 		(at 177.8 78.74 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2665,7 +2688,6 @@
 	)
 	(label "MOSI_1"
 		(at 177.8 64.77 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2676,7 +2698,6 @@
 	)
 	(label "MOSI_2"
 		(at 222.25 85.09 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2687,7 +2708,6 @@
 	)
 	(label "LED_PWM_2"
 		(at 222.25 74.93 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2698,7 +2718,6 @@
 	)
 	(label "LED-"
 		(at 222.25 125.73 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2709,7 +2728,6 @@
 	)
 	(label "GND"
 		(at 222.25 77.47 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2720,7 +2738,6 @@
 	)
 	(label "DISP_POWER_EN"
 		(at 125.73 45.72 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2731,7 +2748,6 @@
 	)
 	(label "VDD"
 		(at 177.8 76.2 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2742,7 +2758,6 @@
 	)
 	(label "MOSI_0"
 		(at 177.8 62.23 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2753,7 +2768,6 @@
 	)
 	(label "~{INT_IO}"
 		(at 95.25 58.42 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2764,7 +2778,6 @@
 	)
 	(label "~{INT_IO}"
 		(at 129.54 130.81 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2775,7 +2788,6 @@
 	)
 	(label "LED_PWM_1"
 		(at 222.25 50.8 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2786,7 +2798,6 @@
 	)
 	(label "RS"
 		(at 222.25 58.42 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2797,7 +2808,6 @@
 	)
 	(label "LED_PWM_2"
 		(at 167.64 35.56 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2808,7 +2818,6 @@
 	)
 	(label "GND"
 		(at 222.25 151.13 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2819,7 +2828,6 @@
 	)
 	(label "SCL"
 		(at 95.25 81.28 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2830,7 +2838,6 @@
 	)
 	(label "CS_1"
 		(at 129.54 64.77 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2841,7 +2848,6 @@
 	)
 	(label "SCLK"
 		(at 222.25 40.64 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2852,7 +2858,6 @@
 	)
 	(label "IO0"
 		(at 129.54 102.87 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2863,7 +2868,6 @@
 	)
 	(label "CS_4"
 		(at 179.07 107.95 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2874,7 +2878,6 @@
 	)
 	(label "CS_3"
 		(at 129.54 69.85 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2885,7 +2888,6 @@
 	)
 	(label "RS"
 		(at 222.25 82.55 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2896,7 +2898,6 @@
 	)
 	(label "MOSI_0"
 		(at 222.25 38.1 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2907,7 +2908,6 @@
 	)
 	(label "VDD"
 		(at 222.25 66.04 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2918,7 +2918,6 @@
 	)
 	(label "MOSI_3"
 		(at 177.8 69.85 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2929,7 +2928,6 @@
 	)
 	(label "CS_0"
 		(at 129.54 62.23 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2940,7 +2938,6 @@
 	)
 	(label "SDA"
 		(at 95.25 78.74 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2951,7 +2948,6 @@
 	)
 	(label "MISO"
 		(at 95.25 111.76 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2962,7 +2958,6 @@
 	)
 	(label "LED_PWM_3"
 		(at 222.25 96.52 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2973,7 +2968,6 @@
 	)
 	(label "CS_4"
 		(at 129.54 73.66 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2984,7 +2978,6 @@
 	)
 	(label "SCLK"
 		(at 95.25 109.22 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2995,7 +2988,6 @@
 	)
 	(label "VCC"
 		(at 167.64 46.99 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3006,7 +2998,6 @@
 	)
 	(label "WS28XX"
 		(at 129.54 127 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3017,7 +3008,6 @@
 	)
 	(label "VDD"
 		(at 222.25 111.76 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3028,7 +3018,6 @@
 	)
 	(label "CS_MEM_1"
 		(at 129.54 120.65 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3039,7 +3028,6 @@
 	)
 	(label "MOSI_1"
 		(at 222.25 60.96 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3050,7 +3038,6 @@
 	)
 	(label "LED_PWM_4"
 		(at 222.25 128.27 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3061,7 +3048,6 @@
 	)
 	(label "~{RESET}"
 		(at 222.25 55.88 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3072,7 +3058,6 @@
 	)
 	(label "GND"
 		(at 222.25 99.06 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3083,7 +3068,6 @@
 	)
 	(label "~{RESET}"
 		(at 179.07 125.73 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3094,7 +3078,6 @@
 	)
 	(label "CS_2"
 		(at 222.25 92.71 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3105,7 +3088,6 @@
 	)
 	(label "MOSI"
 		(at 179.07 114.3 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3116,7 +3098,6 @@
 	)
 	(label "LED_PWM_1"
 		(at 167.64 33.02 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3127,7 +3108,6 @@
 	)
 	(label "GND"
 		(at 222.25 30.48 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3138,7 +3118,6 @@
 	)
 	(label "CS_4"
 		(at 222.25 148.59 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3149,7 +3128,6 @@
 	)
 	(label "~{RESET}"
 		(at 222.25 33.02 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3160,7 +3138,6 @@
 	)
 	(label "SDA"
 		(at 129.54 109.22 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3171,7 +3148,6 @@
 	)
 	(label "SCL"
 		(at 95.25 55.88 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3182,7 +3158,6 @@
 	)
 	(label "IOVCC"
 		(at 236.22 146.05 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3193,7 +3168,6 @@
 	)
 	(label "RS"
 		(at 179.07 128.27 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3204,7 +3178,6 @@
 	)
 	(label "CS_3"
 		(at 222.25 114.3 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3215,7 +3188,6 @@
 	)
 	(label "MOSI"
 		(at 129.54 78.74 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3226,7 +3198,6 @@
 	)
 	(label "SCLK"
 		(at 222.25 87.63 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3237,7 +3208,6 @@
 	)
 	(label "~{RESET}"
 		(at 222.25 80.01 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3248,7 +3218,6 @@
 	)
 	(label "SCL"
 		(at 132.08 31.75 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3259,7 +3228,6 @@
 	)
 	(label "VCC"
 		(at 222.25 143.51 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3270,7 +3238,6 @@
 	)
 	(label "SDA"
 		(at 132.08 29.21 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3281,7 +3248,6 @@
 	)
 	(label "CS_2"
 		(at 179.07 101.6 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3292,7 +3258,6 @@
 	)
 	(label "CS_2"
 		(at 129.54 67.31 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3303,7 +3268,6 @@
 	)
 	(label "MOSI_3"
 		(at 222.25 106.68 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3314,7 +3278,6 @@
 	)
 	(label "LED_PWM_0"
 		(at 222.25 27.94 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3325,7 +3288,6 @@
 	)
 	(label "IO0"
 		(at 95.25 34.29 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3336,7 +3298,6 @@
 	)
 	(label "CS_1"
 		(at 222.25 68.58 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3347,7 +3308,6 @@
 	)
 	(label "WS28XX"
 		(at 95.25 63.5 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3358,7 +3318,6 @@
 	)
 	(label "CS_1"
 		(at 179.07 99.06 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3369,7 +3328,6 @@
 	)
 	(label "DC"
 		(at 222.25 135.89 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3380,7 +3338,6 @@
 	)
 	(label "MCU_RXD"
 		(at 129.54 96.52 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3389,9 +3346,18 @@
 		)
 		(uuid "de442bb2-981a-41cd-b0b1-d64e543ad279")
 	)
+	(label "OE_MEM"
+		(at 95.25 114.3 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "e1218d4a-6c2b-4cf9-b944-174cb2660011")
+	)
 	(label "GND"
 		(at 222.25 123.19 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3402,7 +3368,6 @@
 	)
 	(label "CS_MEM_1"
 		(at 95.25 104.14 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3413,7 +3378,6 @@
 	)
 	(label "SDA"
 		(at 95.25 53.34 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3424,7 +3388,6 @@
 	)
 	(label "MCU_RXD"
 		(at 95.25 29.21 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3435,7 +3398,6 @@
 	)
 	(label "VDD"
 		(at 167.64 44.45 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3446,7 +3408,6 @@
 	)
 	(label "LED_PWM_4"
 		(at 167.64 40.64 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3457,7 +3418,6 @@
 	)
 	(label "SCL"
 		(at 129.54 111.76 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3468,7 +3428,6 @@
 	)
 	(label "GND"
 		(at 222.25 130.81 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3479,7 +3438,6 @@
 	)
 	(label "GND"
 		(at 222.25 53.34 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3490,7 +3448,6 @@
 	)
 	(label "DISP_POWER_EN"
 		(at 125.73 115.57 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5288,6 +5245,10 @@
 	(sheet
 		(at 50.8 50.8)
 		(size 39.37 15.24)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -5317,43 +5278,43 @@
 		)
 		(pin "SDA" input
 			(at 90.17 53.34 0)
+			(uuid "6c1a1ecd-0e24-4c6d-83fa-cb7136eaa1c3")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "6c1a1ecd-0e24-4c6d-83fa-cb7136eaa1c3")
 		)
 		(pin "SCL" input
 			(at 90.17 55.88 0)
+			(uuid "3094e452-a322-46f8-9a79-3b07f6864acd")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "3094e452-a322-46f8-9a79-3b07f6864acd")
 		)
 		(pin "WS28XX" input
 			(at 90.17 63.5 0)
+			(uuid "c5eccf9b-ada9-4040-a43f-2ccd0ff6194a")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "c5eccf9b-ada9-4040-a43f-2ccd0ff6194a")
 		)
 		(pin "~{INT_IO}" output
 			(at 90.17 58.42 0)
+			(uuid "65750a30-7e57-43a6-9ae8-f5cf82c38cca")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "65750a30-7e57-43a6-9ae8-f5cf82c38cca")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -5366,6 +5327,10 @@
 	(sheet
 		(at 50.8 101.6)
 		(size 38.1 15.24)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -5395,43 +5360,53 @@
 		)
 		(pin "CS_MEM_1" input
 			(at 88.9 104.14 0)
+			(uuid "b2b8a0a6-948f-4f8c-835b-2ab73426144d")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "b2b8a0a6-948f-4f8c-835b-2ab73426144d")
 		)
 		(pin "MOSI" input
 			(at 88.9 106.68 0)
+			(uuid "bd56d080-1a86-463f-8266-a88639105794")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "bd56d080-1a86-463f-8266-a88639105794")
 		)
 		(pin "SCLK" input
 			(at 88.9 109.22 0)
+			(uuid "f5e8557d-dbec-4d84-ad02-96084cb592a9")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "f5e8557d-dbec-4d84-ad02-96084cb592a9")
 		)
 		(pin "MISO" input
 			(at 88.9 111.76 0)
+			(uuid "cddef3b7-f72e-4267-9743-a6543ff16ee6")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "cddef3b7-f72e-4267-9743-a6543ff16ee6")
+		)
+		(pin "OE_MEM" input
+			(at 88.9 114.3 0)
+			(uuid "808dfdef-59d3-46bc-a226-bcb0bf30d19a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -5444,6 +5419,10 @@
 	(sheet
 		(at 50.8 76.2)
 		(size 39.37 12.7)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -5473,23 +5452,23 @@
 		)
 		(pin "SCL" input
 			(at 90.17 81.28 0)
+			(uuid "d41c4996-9227-462f-816b-d35ffc8e0da4")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "d41c4996-9227-462f-816b-d35ffc8e0da4")
 		)
 		(pin "SDA" input
 			(at 90.17 78.74 0)
+			(uuid "9683138a-15a1-440f-bedf-f34618565e4f")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "9683138a-15a1-440f-bedf-f34618565e4f")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -5502,6 +5481,10 @@
 	(sheet
 		(at 139.7 57.15)
 		(size 33.02 25.4)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -5531,133 +5514,133 @@
 		)
 		(pin "MOSI_2" output
 			(at 172.72 67.31 0)
+			(uuid "f7d058e5-77b0-464e-81d4-0ab4478ad49c")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "f7d058e5-77b0-464e-81d4-0ab4478ad49c")
 		)
 		(pin "MOSI_1" output
 			(at 172.72 64.77 0)
+			(uuid "67924e2a-af5e-41dc-965b-dc36b2dd79a7")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "67924e2a-af5e-41dc-965b-dc36b2dd79a7")
 		)
 		(pin "CS_2" output
 			(at 139.7 67.31 180)
+			(uuid "94ed7169-fd85-4bdf-a4dd-60de21bb63ce")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "94ed7169-fd85-4bdf-a4dd-60de21bb63ce")
 		)
 		(pin "CS_1" output
 			(at 139.7 64.77 180)
+			(uuid "5a9bc77a-1d34-4ec9-89eb-c961d303b22b")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "5a9bc77a-1d34-4ec9-89eb-c961d303b22b")
 		)
 		(pin "CS_0" output
 			(at 139.7 62.23 180)
+			(uuid "e514fd0b-f39b-4a7c-9a0e-c3dc560b83e7")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "e514fd0b-f39b-4a7c-9a0e-c3dc560b83e7")
 		)
 		(pin "MOSI" input
 			(at 139.7 78.74 180)
+			(uuid "889af88d-3df4-4b08-b49c-d7ed10fbe4f0")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "889af88d-3df4-4b08-b49c-d7ed10fbe4f0")
 		)
 		(pin "MOSI_0" output
 			(at 172.72 62.23 0)
+			(uuid "a8e6457a-e96a-4790-a0c9-c5a0e0db8a27")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "a8e6457a-e96a-4790-a0c9-c5a0e0db8a27")
 		)
 		(pin "MOSI_3" output
 			(at 172.72 69.85 0)
+			(uuid "016dfd2f-1d5e-4897-82bf-e395247dd331")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "016dfd2f-1d5e-4897-82bf-e395247dd331")
 		)
 		(pin "CS_3" output
 			(at 139.7 69.85 180)
+			(uuid "5f810d9e-ad19-4fa6-bb28-e3dbd6b9d7e1")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "5f810d9e-ad19-4fa6-bb28-e3dbd6b9d7e1")
 		)
 		(pin "CS_4" output
 			(at 139.7 73.66 180)
+			(uuid "882ee05e-7c05-458e-aa94-2fbf9ca8bcab")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "882ee05e-7c05-458e-aa94-2fbf9ca8bcab")
 		)
 		(pin "MOSI_4" output
 			(at 172.72 72.39 0)
+			(uuid "9fa80ec9-06ec-471f-8de4-be247d8c6d53")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "9fa80ec9-06ec-471f-8de4-be247d8c6d53")
 		)
 		(pin "VDD" input
 			(at 172.72 76.2 0)
+			(uuid "81fbd4f5-2a29-4502-b97e-6169cb4012c4")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "81fbd4f5-2a29-4502-b97e-6169cb4012c4")
 		)
 		(pin "VCC" input
 			(at 172.72 78.74 0)
+			(uuid "61bb7041-9cf2-4f13-961d-3149bfc7363a")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "61bb7041-9cf2-4f13-961d-3149bfc7363a")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -5670,6 +5653,10 @@
 	(sheet
 		(at 50.8 25.4)
 		(size 39.37 15.24)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -5699,43 +5686,43 @@
 		)
 		(pin "MCU_RXD" input
 			(at 90.17 29.21 0)
+			(uuid "e80c8869-04e9-4f0e-b4f0-957e4784014c")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "e80c8869-04e9-4f0e-b4f0-957e4784014c")
 		)
 		(pin "MCU_TXD" input
 			(at 90.17 31.75 0)
+			(uuid "182615ba-2dcb-4d32-9648-0c116f148d36")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "182615ba-2dcb-4d32-9648-0c116f148d36")
 		)
 		(pin "IO0" input
 			(at 90.17 34.29 0)
+			(uuid "22be3e46-6139-4f63-ba72-8e358f6cd6a6")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "22be3e46-6139-4f63-ba72-8e358f6cd6a6")
 		)
 		(pin "EN" input
 			(at 90.17 36.83 0)
+			(uuid "f30b00e8-db3f-45ca-807d-59ce29c4aacc")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "f30b00e8-db3f-45ca-807d-59ce29c4aacc")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -5748,6 +5735,10 @@
 	(sheet
 		(at 139.7 25.4)
 		(size 25.4 25.4)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -5777,103 +5768,103 @@
 		)
 		(pin "LED_PWM_0" input
 			(at 165.1 30.48 0)
+			(uuid "7a6147f8-13e9-4fce-93f7-ba4a6098077a")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "7a6147f8-13e9-4fce-93f7-ba4a6098077a")
 		)
 		(pin "LED_PWM_1" input
 			(at 165.1 33.02 0)
+			(uuid "b3c13291-f21a-4ace-a0fc-3ec23f757b78")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "b3c13291-f21a-4ace-a0fc-3ec23f757b78")
 		)
 		(pin "LED_PWM_2" input
 			(at 165.1 35.56 0)
+			(uuid "f87eca6a-ece8-414b-b790-38541cae2b9e")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "f87eca6a-ece8-414b-b790-38541cae2b9e")
 		)
 		(pin "LED_PWM_3" input
 			(at 165.1 38.1 0)
+			(uuid "e564e787-3b33-4398-ae95-e9b4bf7307db")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "e564e787-3b33-4398-ae95-e9b4bf7307db")
 		)
 		(pin "LED_PWM_4" input
 			(at 165.1 40.64 0)
+			(uuid "6bf13db7-c1d1-416a-ae21-5b47e32de2b5")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "6bf13db7-c1d1-416a-ae21-5b47e32de2b5")
 		)
 		(pin "SDA" input
 			(at 139.7 29.21 180)
+			(uuid "430ce81b-1f0e-4adf-ab2a-f4af30024414")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "430ce81b-1f0e-4adf-ab2a-f4af30024414")
 		)
 		(pin "SCL" input
 			(at 139.7 31.75 180)
+			(uuid "5da36c37-209a-4e08-b648-9b93e2577f89")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "5da36c37-209a-4e08-b648-9b93e2577f89")
 		)
 		(pin "VDD" output
 			(at 165.1 44.45 0)
+			(uuid "a2c743d5-286b-4758-92b1-570e5247cf55")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "a2c743d5-286b-4758-92b1-570e5247cf55")
 		)
 		(pin "VCC" output
 			(at 165.1 46.99 0)
+			(uuid "cc196bc1-19cb-4452-96c9-efdaab7503fa")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "cc196bc1-19cb-4452-96c9-efdaab7503fa")
 		)
 		(pin "DISP_POWER_EN" input
 			(at 139.7 45.72 180)
+			(uuid "5886c7e1-74a3-4d9f-be3a-08fb2e36a35c")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "5886c7e1-74a3-4d9f-be3a-08fb2e36a35c")
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -5886,6 +5877,10 @@
 	(sheet
 		(at 139.7 88.9)
 		(size 33.02 46.99)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -5915,213 +5910,223 @@
 		)
 		(pin "EN" input
 			(at 139.7 100.33 180)
+			(uuid "e9344d0a-1b76-47ac-a502-a4cf36518e7d")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "e9344d0a-1b76-47ac-a502-a4cf36518e7d")
 		)
 		(pin "MCU_TXD" output
 			(at 139.7 93.98 180)
+			(uuid "10ecbe87-e74e-4e58-bb10-5a7fcf565782")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "10ecbe87-e74e-4e58-bb10-5a7fcf565782")
 		)
 		(pin "MCU_RXD" input
 			(at 139.7 96.52 180)
+			(uuid "935dbfc6-efa2-451c-8a01-1c1e99686cd1")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "935dbfc6-efa2-451c-8a01-1c1e99686cd1")
 		)
 		(pin "IO0" input
 			(at 139.7 102.87 180)
+			(uuid "e15d2d79-39f1-4838-a169-6b49a2796e8a")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "e15d2d79-39f1-4838-a169-6b49a2796e8a")
 		)
 		(pin "CS_MEM_1" output
 			(at 139.7 120.65 180)
+			(uuid "b6a68ca5-d8d7-4ce7-95d9-4fb80abab5a6")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "b6a68ca5-d8d7-4ce7-95d9-4fb80abab5a6")
 		)
 		(pin "CS_3" output
 			(at 172.72 104.14 0)
+			(uuid "803be73a-b907-41a2-9081-34ba97c3cfad")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "803be73a-b907-41a2-9081-34ba97c3cfad")
 		)
 		(pin "CS_0" output
 			(at 172.72 96.52 0)
+			(uuid "ff7403cb-e62b-4882-b5f5-a18909091d43")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "ff7403cb-e62b-4882-b5f5-a18909091d43")
 		)
 		(pin "CS_1" output
 			(at 172.72 99.06 0)
+			(uuid "d94df34a-71fa-410d-8c40-8bff64a524f1")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "d94df34a-71fa-410d-8c40-8bff64a524f1")
 		)
 		(pin "CS_2" output
 			(at 172.72 101.6 0)
+			(uuid "eb7b81ee-f5a4-49de-a0cf-bba374ef2791")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "eb7b81ee-f5a4-49de-a0cf-bba374ef2791")
 		)
 		(pin "CS_4" output
 			(at 172.72 107.95 0)
+			(uuid "86c01e00-4910-4a6b-b78e-e27496dc3634")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "86c01e00-4910-4a6b-b78e-e27496dc3634")
 		)
 		(pin "SCL" bidirectional
 			(at 139.7 111.76 180)
+			(uuid "4f3d2f1e-a557-4714-9371-bd49508b9258")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "4f3d2f1e-a557-4714-9371-bd49508b9258")
 		)
 		(pin "SDA" bidirectional
 			(at 139.7 109.22 180)
+			(uuid "e3a1a4dc-0767-4b2c-a3e7-db4796772ad5")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "e3a1a4dc-0767-4b2c-a3e7-db4796772ad5")
 		)
 		(pin "MISO" input
 			(at 172.72 119.38 0)
+			(uuid "4a8ab072-d696-4f27-8bbf-6c095256b739")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "4a8ab072-d696-4f27-8bbf-6c095256b739")
 		)
 		(pin "SCLK" output
 			(at 172.72 116.84 0)
+			(uuid "25be4227-b4d3-4bae-a142-8c246c2095a3")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "25be4227-b4d3-4bae-a142-8c246c2095a3")
 		)
 		(pin "MOSI" output
 			(at 172.72 114.3 0)
+			(uuid "bfef71fd-7694-418e-8e4d-f36999cd059b")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "bfef71fd-7694-418e-8e4d-f36999cd059b")
 		)
 		(pin "~{RESET}" output
 			(at 172.72 125.73 0)
+			(uuid "32eb8c4e-c15a-4038-9aba-f5e73829644e")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "32eb8c4e-c15a-4038-9aba-f5e73829644e")
 		)
 		(pin "DC" output
 			(at 172.72 130.81 0)
+			(uuid "8dca2452-2eaa-4f17-8ce0-557e303f8e63")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "8dca2452-2eaa-4f17-8ce0-557e303f8e63")
 		)
 		(pin "DISP_POWER_EN" output
 			(at 139.7 115.57 180)
+			(uuid "cc8b09bc-e324-424e-90c9-1bf5d9aa7246")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "cc8b09bc-e324-424e-90c9-1bf5d9aa7246")
 		)
 		(pin "RS" output
 			(at 172.72 128.27 0)
+			(uuid "f961df97-8c67-4130-88c9-d39bebd4fce7")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "f961df97-8c67-4130-88c9-d39bebd4fce7")
 		)
 		(pin "WS28XX" output
 			(at 139.7 127 180)
+			(uuid "8e833da9-a608-4b25-9654-c151a40f40e7")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "8e833da9-a608-4b25-9654-c151a40f40e7")
 		)
 		(pin "~{INT_IO}" input
 			(at 139.7 130.81 180)
+			(uuid "0041ef22-d02f-4fdf-b5eb-ac141c7ea833")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "0041ef22-d02f-4fdf-b5eb-ac141c7ea833")
+		)
+		(pin "OE_MEM" output
+			(at 139.7 123.19 180)
+			(uuid "2bbef85d-3e4d-44b9-a927-fb5eb79637b7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
 		)
 		(instances
 			(project "NixieClock_MainBoard"
@@ -6136,4 +6141,5 @@
 			(page "1")
 		)
 	)
+	(embedded_fonts no)
 )
