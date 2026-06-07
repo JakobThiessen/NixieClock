@@ -13,7 +13,7 @@
   <img src="/pict/mainboard_schematic.png" width="800" />
 </p>
 
-Wichtig: Ohne Änderung tut die SD karte nicht. 
+Wichtig: Ohne Änderung tut die SD karte nicht. (Betrifft nur V2.0 in der V2.1 sind die Änderung im Layout schon umgesetzt)
 <p float="left">
   <img src="/pict/aenderung_sd_card.png" width="800" />
 </p>
