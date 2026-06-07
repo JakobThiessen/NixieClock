@@ -13,6 +13,11 @@
   <img src="/pict/mainboard_schematic.png" width="800" />
 </p>
 
+Wichtig: Ohne Änderung tut die SD karte nicht. 
+<p float="left">
+  <img src="/pict/aenderung_sd_card.png" width="800" />
+</p>
+
 <p float="left">
   <img src="/pict/mainboard_top.png" width="600" />
 </p>
