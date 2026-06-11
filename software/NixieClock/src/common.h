@@ -52,11 +52,18 @@ extern "C" {
 #define I2C_SDA_PIN     21
 #define I2C_SCL_PIN     22
 
-#define FW_VERSION "5.0.0"
+#define FW_VERSION "5.12.0"
 #define FW_BUILD_DATE __DATE__
 #define FW_BUILD_TIME __TIME__
 
 #define SD_CACHE_MAX 128
+
+// SD background image limits (24-bit BMP only)
+#define BG_IMAGE_MAX_FILE_SIZE  (100UL * 1024UL)  // max file size on SD
+#define BG_IMAGE_MAX_W          160               // max image width  (px)
+#define BG_IMAGE_MAX_H          128               // max image height (px)
+
+
 
 typedef struct {
     char path[128];
@@ -101,6 +108,8 @@ typedef struct{
     char weatherCity[32];
     float weatherLat;
     float weatherLon;
+    char bgImagePath[128];  // SD path to background BMP; empty = none
+    bool bgTextDark;        // true = dark text (use for light-coloured images)
 }systemConfigStruct;
 
 typedef struct{
@@ -149,6 +158,9 @@ extern rgbConfigStruct rgbConfig;
 extern systemConfigStruct systemConfig;
 extern clockConfiguration clockConfig;
 extern weatherDataStruct weatherData;
+extern uint16_t* bgImageData;  // RGB565 buffer of loaded background; nullptr if none
+extern uint16_t  bgImageW;     // width of loaded image in pixels
+extern uint16_t  bgImageH;     // height of loaded image in pixels
 
 #ifdef __cplusplus
 }
@@ -158,6 +170,9 @@ extern weatherDataStruct weatherData;
 // Thread-safe: takes xSpiMutex internally. Returns true on success. No-op if SD absent.
 #ifdef __cplusplus
 bool saveConfigToSD();
+// Load BMP from systemConfig.bgImagePath into bgImageData (RGB565 heap buffer).
+// Thread-safe: acquires xSpiMutex internally. Call after bootInitDone is set.
+bool loadBgImage();
 #endif
 
 #endif /* COMMON_CONFIG_h */

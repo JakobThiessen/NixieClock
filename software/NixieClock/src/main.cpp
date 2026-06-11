@@ -15,7 +15,7 @@
 #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 
 #include "draw7Numbers.h"
-
+/*
 #include "0.h"
 #include "1.h"
 #include "2.h"
@@ -24,6 +24,7 @@
 #include "5.h"
 #include "3_neon.h"
 #include "7_neon.h"
+*/
 #include "weather_icon_set.h"
 #include "background_1.h"
 #include "birthday.h"
@@ -40,6 +41,7 @@
 #include "vTask_WebServer.h"
 #include "bootAnim.h"
 #include "vTask_weather.h"
+#include <JPEGDEC.h>         // JPEG decode (JPEGDEC by Larry Bank)
 
 /**************************** */
 /*** DEFINES              *** */
@@ -84,6 +86,12 @@ SemaphoreHandle_t xI2cMutex = NULL;  // shared I2C (Wire) bus mutex
 volatile bool bootInitDone = false;
 weatherDataStruct weatherData = {};
 
+// SD background image buffer – heap-allocated on first loadBgImage() call.
+// Kept as nullptr until a valid image is loaded; freed memory only needed in display task.
+uint16_t* bgImageData = nullptr;  // nullptr until first successful loadBgImage()
+uint16_t  bgImageW    = 0;
+uint16_t  bgImageH    = 0;
+
 // SD directory cache – populated at boot, served by WebServer without SPI access
 SdCacheEntry sdFileCache[SD_CACHE_MAX];
 int sdFileCacheCount = 0;
@@ -110,6 +118,206 @@ void scanSdCache(const char* dirPath) {
         entry.close();
     }
     dir.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared decode state for JPEG callback (set before decode, cleared after)
+// ─────────────────────────────────────────────────────────────────────────────
+static uint16_t* s_decBuf = nullptr;
+static uint16_t  s_decW   = 0;
+static uint16_t  s_decH   = 0;
+
+// JPEG MCU block callback – copies decoded block into s_bgImageBuf.
+// Full bounds checking: negative x/y from JPEGDEC are valid for right-edge MCUs
+// and MUST be handled; writing before the buffer start causes a hard crash.
+static int jpegBlockCb(JPEGDRAW* pDraw)
+{
+    if (!s_decBuf || s_decW == 0 || s_decH == 0) return 0;
+
+    for (int row = 0; row < pDraw->iHeight; row++) {
+        int dy = pDraw->y + row;
+        if (dy < 0)              continue;   // block starts above frame
+        if (dy >= (int)s_decH)   break;      // past bottom of frame
+
+        // Compute source pixel range within the MCU row
+        int srcX0 = 0;                       // first source column to copy
+        int dstX  = pDraw->x;               // first destination column
+        if (dstX < 0) { srcX0 = -dstX; dstX = 0; }  // clip left
+        int cpW = pDraw->iWidth - srcX0;    // pixels remaining after left-clip
+        if (dstX + cpW > (int)s_decW) cpW = (int)s_decW - dstX;  // clip right
+        if (cpW <= 0) continue;
+
+        // Safety assertion: destination range must be within buffer
+        uint32_t dstOff = (uint32_t)dy * s_decW + dstX;
+        if (dstOff + (uint32_t)cpW > (uint32_t)BG_IMAGE_MAX_W * BG_IMAGE_MAX_H) {
+            Serial.printf("[BGIMG] JPEG cb OOB dy=%d dstX=%d cpW=%d\n", dy, dstX, cpW);
+            return 0;  // abort decode
+        }
+
+        memcpy(&s_decBuf[dstOff],
+               &pDraw->pPixels[(uint32_t)row * pDraw->iWidth + srcX0],
+               (size_t)cpW * 2u);
+    }
+    return 1;
+}
+
+// JPEGDEC file-based I/O callbacks – stream directly from SD without a large file buffer.
+// s_jpegFsFile points to the already-open FsFile managed by loadBgImage().
+static FsFile* s_jpegFsFile = nullptr;
+static void*   jpegOpenCb(const char* fn, int32_t* pSize) {
+    (void)fn; *pSize = (int32_t)s_jpegFsFile->size(); return (void*)s_jpegFsFile;
+}
+static void    jpegCloseCb(void* p)  { (void)p; /* closed externally */ }
+static int32_t jpegReadCb(JPEGFILE* p, uint8_t* buf, int32_t len) {
+    (void)p; return (int32_t)s_jpegFsFile->read(buf, len);
+}
+static int32_t jpegSeekCb(JPEGFILE* p, int32_t pos) {
+    (void)p; return s_jpegFsFile->seek(pos) ? pos : -1;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// loadBgImage() – loads BMP (24-bit) or JPEG from SD into a heap RGB565 buffer.
+// Images larger than 160×128 are cropped to the top-left corner.
+// Thread-safe: acquires xSpiMutex. For JPEG the bus is released after file read;
+// decoding happens from a RAM copy so the display task can run concurrently.
+// ─────────────────────────────────────────────────────────────────────────────
+bool loadBgImage()
+{
+    bgImageW = 0; bgImageH = 0;
+
+    if (!systemConfig.backgroundEnabled) {
+        Serial.println("[BGIMG] background disabled");
+        return false;
+    }
+
+    if (!systemConfig.sdCardDetected || systemConfig.bgImagePath[0] == '\0') {
+        Serial.println("[BGIMG] no path configured");
+        return false;
+    }
+
+    // Determine format from extension
+    const char* ext = strrchr(systemConfig.bgImagePath, '.');
+    bool isBmp  = ext && (strcasecmp(ext, ".bmp")  == 0);
+    bool isJpeg = ext && (strcasecmp(ext, ".jpg")  == 0 || strcasecmp(ext, ".jpeg") == 0);
+    if (!isBmp && !isJpeg) {
+        Serial.println("[BGIMG] unsupported format (need .bmp or .jpg)");
+        return false;
+    }
+
+    // Check file size from RAM cache – no SPI needed
+    uint32_t fileSize = 0; bool found = false;
+    for (int i = 0; i < sdFileCacheCount; i++) {
+        if (strcmp(sdFileCache[i].path, systemConfig.bgImagePath) == 0) {
+            fileSize = sdFileCache[i].size; found = true; break;
+        }
+    }
+    if (!found) { Serial.printf("[BGIMG] not in SD cache: %s\n", systemConfig.bgImagePath); return false; }
+    if (fileSize > BG_IMAGE_MAX_FILE_SIZE) {
+        Serial.printf("[BGIMG] too large: %u bytes (max %u)\n", (unsigned)fileSize, (unsigned)BG_IMAGE_MAX_FILE_SIZE);
+        return false;
+    }
+
+    // Puffer muss bereits in setup() alloziert worden sein
+    if (!bgImageData) {
+        Serial.println("[BGIMG] kein Pixelbuffer (pre-alloc fehlgeschlagen)");
+        return false;
+    }
+
+    // Acquire SPI bus + SD reinit (immer, da SPI.begin für Displays den SD-Zustand zerstört)
+    if (!sdAcquireBus()) {
+        Serial.println("[BGIMG] sdAcquireBus failed"); return false;
+    }
+
+    auto releaseBus = [&]() { sdReleaseBus(); };
+
+    // Open file – nach sdAcquireBus() ist sdCard garantiert frisch initialisiert
+    FsFile f = sdCard.open(systemConfig.bgImagePath, O_RDONLY);
+    if (!f) {
+        Serial.println("[BGIMG] open failed");
+        releaseBus(); return false;
+    }
+
+    // ── JPEG: stream decode directly from SD – SPI bus kept held during decode ──
+    // Using file-based JPEGDEC callbacks avoids a large heap allocation for the file data.
+    // Only needs ~40 KB for the RGB565 output buffer (160×128×2 bytes).
+    if (isJpeg) {
+        Serial.printf("[BGIMG] free heap before JPEG decode: %u bytes\n", (unsigned)ESP.getFreeHeap());
+        JPEGDEC jpeg;
+        s_jpegFsFile = &f;
+        if (!jpeg.open(systemConfig.bgImagePath, jpegOpenCb, jpegCloseCb, jpegReadCb, jpegSeekCb, jpegBlockCb)) {
+            Serial.println("[BGIMG] JPEG open failed");
+            s_jpegFsFile = nullptr; f.close(); releaseBus(); return false;
+        }
+        jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
+        uint16_t jpW = (uint16_t)jpeg.getWidth();
+        uint16_t jpH = (uint16_t)jpeg.getHeight();
+        uint16_t outW = jpW < BG_IMAGE_MAX_W ? jpW : BG_IMAGE_MAX_W;
+        uint16_t outH = jpH < BG_IMAGE_MAX_H ? jpH : BG_IMAGE_MAX_H;
+        // Use pre-allocated buffer – no large malloc at runtime
+        memset(bgImageData, 0, (uint32_t)BG_IMAGE_MAX_W * BG_IMAGE_MAX_H * 2u);
+        s_decBuf = bgImageData; s_decW = outW; s_decH = outH;
+        jpeg.decode(0, 0, 0);
+        jpeg.close();
+        s_decBuf = nullptr; s_jpegFsFile = nullptr;
+        f.close();
+        releaseBus();
+        bgImageW = outW; bgImageH = outH;
+        Serial.printf("[BGIMG] JPEG loaded %dx%d (src %dx%d)\n", outW, outH, jpW, jpH);
+        return true;
+    }
+
+    // ── BMP (24-bit uncompressed): decode row-by-row from SD, crop if needed ─
+    uint8_t hdr[54];
+    if (f.read(hdr, 54) != 54 || hdr[0] != 'B' || hdr[1] != 'M') {
+        Serial.println("[BGIMG] invalid BMP header");
+        f.close(); releaseBus(); return false;
+    }
+    uint32_t dataOffset = (uint32_t)hdr[10] | ((uint32_t)hdr[11]<<8) | ((uint32_t)hdr[12]<<16) | ((uint32_t)hdr[13]<<24);
+    int32_t  imgW       = (int32_t)((uint32_t)hdr[18] | ((uint32_t)hdr[19]<<8) | ((uint32_t)hdr[20]<<16) | ((uint32_t)hdr[21]<<24));
+    int32_t  imgH       = (int32_t)((uint32_t)hdr[22] | ((uint32_t)hdr[23]<<8) | ((uint32_t)hdr[24]<<16) | ((uint32_t)hdr[25]<<24));
+    uint16_t bpp        = (uint16_t)hdr[28] | ((uint16_t)hdr[29]<<8);
+    uint32_t comp       = (uint32_t)hdr[30] | ((uint32_t)hdr[31]<<8) | ((uint32_t)hdr[32]<<16) | ((uint32_t)hdr[33]<<24);
+    bool topDown = (imgH < 0); if (topDown) imgH = -imgH;
+    if (bpp != 24)  { Serial.printf("[BGIMG] BMP bpp=%u (need 24)\n", bpp); f.close(); releaseBus(); return false; }
+    if (comp != 0)  { Serial.println("[BGIMG] compressed BMP not supported");  f.close(); releaseBus(); return false; }
+    if (imgW <= 0 || imgH <= 0) { Serial.println("[BGIMG] invalid BMP dimensions"); f.close(); releaseBus(); return false; }
+    // Crop to display area
+    int32_t drawW = imgW < BG_IMAGE_MAX_W ? imgW : BG_IMAGE_MAX_W;
+    int32_t drawH = imgH < BG_IMAGE_MAX_H ? imgH : BG_IMAGE_MAX_H;
+    if (imgW != drawW || imgH != drawH)
+        Serial.printf("[BGIMG] BMP %dx%d -> crop %dx%d\n", (int)imgW, (int)imgH, (int)drawW, (int)drawH);
+
+    uint32_t rowBytes = ((uint32_t)imgW * 3u + 3u) & ~3u;
+    uint8_t* rowBuf = (uint8_t*)malloc(rowBytes);
+    if (!rowBuf) {
+        Serial.println("[BGIMG] BMP rowBuf malloc failed");
+        f.close(); releaseBus(); return false;
+    }
+    // Use pre-allocated buffer – no large malloc needed
+    uint16_t* imgBuf = bgImageData;
+    bool ok = true;
+    for (int32_t row = 0; row < drawH && ok; row++) {
+        int32_t  srcRow  = topDown ? row : (imgH - 1 - row);
+        uint32_t seekPos = dataOffset + (uint32_t)srcRow * rowBytes;
+        if (!f.seek(seekPos) || f.read(rowBuf, rowBytes) != (int)rowBytes) { ok = false; break; }
+        for (int32_t col = 0; col < drawW; col++) {
+            uint8_t B = rowBuf[col * 3 + 0];
+            uint8_t G = rowBuf[col * 3 + 1];
+            uint8_t R = rowBuf[col * 3 + 2];
+            imgBuf[row * drawW + col] = ((uint16_t)(R & 0xF8u) << 8) | ((uint16_t)(G & 0xFCu) << 3) | (B >> 3);
+        }
+    }
+    free(rowBuf);
+    if (ok) {
+        bgImageW = (uint16_t)drawW; bgImageH = (uint16_t)drawH;
+        Serial.printf("[BGIMG] BMP loaded %dx%d (%u bytes RAM)\n",
+                      (int)drawW, (int)drawH, (unsigned)((uint32_t)drawW * (uint32_t)drawH * 2u));
+    } else {
+        Serial.println("[BGIMG] BMP pixel read error");
+    }
+    f.close();
+    releaseBus();
+    return ok;
 }
 
 TaskHandle_t taskRGB_LED;
@@ -356,9 +564,11 @@ void drawCalendar(int currentDay, int month, int year, uint8_t shortMonthWithYea
     const char *strg_month[] = {"Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"};
     char stgMonth[20];
 
-    uint16_t colorFont = ST77XX_WHITE;
+    // Adapt text colours to background brightness
+    uint16_t colorFont   = systemConfig.bgTextDark ? (uint16_t)ST77XX_BLACK : (uint16_t)ST77XX_WHITE;
+    uint16_t colorHeader = systemConfig.bgTextDark ? (uint16_t)0x0010       : (uint16_t)ST77XX_CYAN;
     uint16_t colorMarker = ST77XX_RED;
-    uint16_t colorLine = ST77XX_BLUE;
+    uint16_t colorLine   = systemConfig.bgTextDark ? (uint16_t)0x8430       : (uint16_t)ST77XX_BLUE;
     uint8_t fontsize = 1;
 
     int disp_w = 160;
@@ -371,15 +581,16 @@ void drawCalendar(int currentDay, int month, int year, uint8_t shortMonthWithYea
     tft.fillScreen(ST77XX_BLACK);
     handle_cs(0, HIGH);
 
-    if (systemConfig.backgroundEnabled)
-    {
+    if (bgImageData && bgImageW > 0 && bgImageH > 0) {
+        // SD background image (RGB565 in RAM) – use explicit cast to select the non-PROGMEM overload
         handle_cs(0, LOW);
-        tft.drawRGBBitmap(0, 0, bg_advent_2, 227, 128);
+        tft.drawRGBBitmap(0, 0, (uint16_t*)bgImageData, (int16_t)bgImageW, (int16_t)bgImageH);
         handle_cs(0, HIGH);
     }
+    // kein Bild geladen (Haken gesetzt aber kein Pfad, oder Ladefehler) → schwarzer Hintergrund bleibt
 
     handle_cs(0, LOW);
-    tft.setTextColor(ST77XX_CYAN);
+    tft.setTextColor(colorHeader);
     handle_cs(0, HIGH);
 
     handle_cs(0, LOW);
@@ -629,9 +840,9 @@ int getLocTime(int *day, int *month, int *year, uint8_t *hour, uint8_t *min, uin
     *min = timeinfo.tm_min;
     *sec = timeinfo.tm_sec;
 
-    // Print time once per second
+    // Print time every 10 seconds
     static uint8_t lastPrintedSec = 0xFF;
-    if (timeinfo.tm_sec != lastPrintedSec) {
+    if (timeinfo.tm_sec != lastPrintedSec && timeinfo.tm_sec % 10 == 0) {
         lastPrintedSec = timeinfo.tm_sec;
         printf("%02d:%02d:%02d %02d.%02d.%04d\n",
             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec,
@@ -647,112 +858,59 @@ volatile static uint8_t old_sec = 0;
 
 void drawTime(uint8_t hour, uint8_t min, uint8_t sec, int timestatus)
 {
-    uint8_t digit_1;
-    uint8_t digit_2;
-    uint8_t digit_3;
-    uint8_t digit_4;
-    bool update_hour = true;
-    bool update_min = true;
-    old_sec = sec;
+    static int8_t old_timestatus = -1;
+
+    uint8_t digit_1 = hour / 10;
+    uint8_t digit_2 = hour % 10;
+    uint8_t digit_3 = min  / 10;
+    uint8_t digit_4 = min  % 10;
+
+    uint8_t old_digit_1 = old_hour / 10;
+    uint8_t old_digit_2 = old_hour % 10;
+    uint8_t old_digit_3 = old_min  / 10;
+    uint8_t old_digit_4 = old_min  % 10;
+
+    // Force full redraw when timestatus changes (e.g. NTP sync acquired/lost)
+    bool force = (old_timestatus != timestatus);
 
     if (timestatus == 0)
     {
-        digit_1 = hour / 10;
-        digit_2 = hour - (digit_1 * 10);
-        digit_3 = min / 10;
-        digit_4 = min - (digit_3 * 10);
-        
-
-        if (update_hour)
-        {
-            /*
-            handle_cs(1, LOW);
+        if (force || digit_1 != old_digit_1) {
             tft_1.fillScreen(ST77XX_BLACK);
-            handle_cs(1, HIGH);
-            handle_cs(1, LOW);
-            tft_1.drawChar(textPosX, textPosY, 0x30 + digit_1, ST7735_GREEN, ST7735_BLACK, fontSize);
-            handle_cs(1, HIGH);
-
-            handle_cs(2, LOW);
-            tft_2.fillScreen(ST77XX_BLACK);
-            handle_cs(2, HIGH);
-            handle_cs(2, LOW);
-            tft_2.drawChar(textPosX, textPosY, 0x30 + digit_2, ST7735_RED, ST7735_BLACK, fontSize);
-            handle_cs(2, HIGH);
-            */
-            tft_1.fillScreen(ST77XX_BLACK);
-            tft_2.fillScreen(ST77XX_BLACK);
             draw7Number(digit_1, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_1);
+        }
+        if (force || digit_2 != old_digit_2) {
+            tft_2.fillScreen(ST77XX_BLACK);
             draw7Number(digit_2, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_2);
         }
-        if (update_min)
-        {
-            /*
-            handle_cs(3, LOW);
+        if (force || digit_3 != old_digit_3) {
             tft_3.fillScreen(ST77XX_BLACK);
-            handle_cs(3, HIGH);
-
-            handle_cs(3, LOW);            
-            tft_3.drawChar(textPosX, textPosY, 0x30 + digit_3, ST7735_WHITE, ST7735_BLACK, fontSize);
-            handle_cs(3, HIGH);
-
-            handle_cs(4, LOW);
-            tft_4.fillScreen(ST77XX_BLACK);
-            handle_cs(4, HIGH);
-
-            handle_cs(4, LOW);
-            tft_4.drawChar(textPosX, textPosY, 0x30 + digit_4, ST7735_ORANGE, ST7735_BLACK, fontSize);
-            handle_cs(4, HIGH);
-            */
-            tft_3.fillScreen(ST77XX_BLACK);
-            tft_4.fillScreen(ST77XX_BLACK);
             draw7Number(digit_3, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_3);
+        }
+        if (force || digit_4 != old_digit_4) {
+            tft_4.fillScreen(ST77XX_BLACK);
             draw7Number(digit_4, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_4);
         }
     }
     else
     {
-        /*
-        handle_cs(1, LOW);
-        tft_1.fillScreen(ST77XX_BLACK);
-        handle_cs(1, HIGH);
-        handle_cs(1, LOW);
-        tft_1.drawChar(textPosX, textPosY, 0x2D, ST7735_GREEN, 0x528A, fontSize);
-        handle_cs(1, HIGH);
-        
-        handle_cs(2, LOW);
-        tft_2.fillScreen(ST77XX_BLACK);
-        handle_cs(2, HIGH);
-        handle_cs(2, LOW);
-        tft_2.drawChar(textPosX, textPosY, 0x2D, ST7735_RED, 0x528A, fontSize);
-        handle_cs(2, HIGH);
-
-        handle_cs(3, LOW);
-        tft_3.fillScreen(ST77XX_BLACK);
-        handle_cs(3, HIGH);
-        handle_cs(3, LOW);
-        tft_3.drawChar(textPosX, textPosY, 0x2D, ST7735_WHITE, 0x528A, fontSize);
-        handle_cs(3, HIGH);
-
-        handle_cs(4, LOW);
-        tft_4.fillScreen(ST77XX_BLACK);
-        handle_cs(4, HIGH);
-        handle_cs(4, LOW);
-        tft_4.drawChar(textPosX, textPosY, 0x2D, ST7735_ORANGE, 0x528A, fontSize);
-        handle_cs(4, HIGH);
-        */
-        tft_1.fillScreen(ST77XX_BLACK);
-        tft_2.fillScreen(ST77XX_BLACK);
-        tft_3.fillScreen(ST77XX_BLACK);
-        tft_4.fillScreen(ST77XX_BLACK);
-        draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_1);
-        draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_2);
-        draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_3);
-        draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_4);
+        // No valid time – show 0000, but only when transitioning into error state
+        if (force) {
+            tft_1.fillScreen(ST77XX_BLACK);
+            tft_2.fillScreen(ST77XX_BLACK);
+            tft_3.fillScreen(ST77XX_BLACK);
+            tft_4.fillScreen(ST77XX_BLACK);
+            draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_1);
+            draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_2);
+            draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_3);
+            draw7Number(0, 20, 20, 10, ST77XX_MAGENTA, 0x18c3, 1, &tft_4);
+        }
     }
 
-    update_hour = false;
-    update_min = false;
+    old_hour       = hour;
+    old_min        = min;
+    old_sec        = sec;
+    old_timestatus = timestatus;
 }
 
 void drawAdventsKerzen()
@@ -796,6 +954,15 @@ void drawAdventsKerzen()
 void setup(void)
 {
     Serial.begin(115200);
+
+    // Beide großen Puffer als allererstes allozieren – Heap ist jetzt maximal defragmentiert.
+    // Spätere Inits (SPI, Adafruit, SD, WiFi) und Task-Stacks fragmentieren den Heap;
+    // danach sind 40–64 KB am Stück nicht mehr garantiert verfügbar.
+    bgImageData = (uint16_t*)malloc((size_t)BG_IMAGE_MAX_W * BG_IMAGE_MAX_H * sizeof(uint16_t));
+    Serial.printf("[BGIMG] pre-alloc %s (free heap: %u)\n",
+                  bgImageData ? "OK" : "FAIL",
+                  (unsigned)ESP.getFreeHeap());
+
 
     Serial.printf("***** ESP32 Info ****\n\r");
     Serial.printf("** getChipCore:      %d\n\r", ESP.getChipCores() );
@@ -972,6 +1139,8 @@ void setup(void)
     systemConfig.calendarEnabled    = true;
     systemConfig.backgroundEnabled  = false;
     systemConfig.bootAnimMode       = 0;  // default: keine Animation
+    systemConfig.bgImagePath[0]     = '\0';
+    systemConfig.bgTextDark         = false;
 
     // RGB defaults – overwritten by Preferences at boot if keys exist
     rgbConfig.rgbMode       = 0;      // Aus
@@ -1015,14 +1184,32 @@ void setup(void)
     xI2cMutex = xSemaphoreCreateMutex();
     if (!xI2cMutex) Serial.println("ERROR: xI2cMutex creation failed!");
 
-    xTaskCreate(
+    // Display-Task ZUERST erstellen: sichert 40 KB zusammenhängenden Heap bevor der
+    // WebServer-Task (80 KB) den Speicher fragmentiert.
+    Serial.printf("[MEM] free heap vor Display-Task: %u, largest block: %u\n",
+                   (unsigned)ESP.getFreeHeap(), (unsigned)ESP.getMaxAllocHeap());
+    BaseType_t dispResult = xTaskCreate(
+        tCodeDisplay,   /* Task function. */
+        "TaskDisp",     /* name of task. */
+        40000,          /* Stack size (bytes): needs ~8 KB for JPEGDEC struct on stack */
+        NULL,           /* parameter of the task */
+        1,              /* priority of the task */
+        &task_Display   /* Task handle to keep track of created task */
+    );
+    if (dispResult != pdPASS) Serial.printf("ERROR: xTaskCreate Display FEHLGESCHLAGEN! (free=%u, maxAlloc=%u)\n",
+                                            (unsigned)ESP.getFreeHeap(), (unsigned)ESP.getMaxAllocHeap());
+
+    BaseType_t srvResult = xTaskCreatePinnedToCore(
         tCodeServerTask, /* Task function. */
         "serverTask",   /* name of task. */
-        80000,          /* Stack size of task */
+        60000,          /* Stack size: 60 KB */
         NULL,           /* parameter of the task */
         3,              /* priority of the task */
-        &serverTask     /* Task handle to keep track of created task */
-    );              
+        &serverTask,    /* Task handle */
+        0               /* Core 0: WiFi/lwIP laeuft ebenfalls auf Core 0 → weniger inter-core overhead */
+    );
+    if (srvResult != pdPASS) Serial.printf("ERROR: xTaskCreate WebServer FEHLGESCHLAGEN! (free=%u, maxAlloc=%u)\n",
+                                           (unsigned)ESP.getFreeHeap(), (unsigned)ESP.getMaxAllocHeap());              
 
     xTaskCreate(
         tCodeRGB,       /* Task function. */
@@ -1045,21 +1232,11 @@ void setup(void)
     xTaskCreate(
         vTask_PCA9538,  /* Task function. */
         "TaskPCA9538",  /* name of task. */
-        4096,           /* Stack size of task */
+        8192,           /* Stack size (bytes): increased from 4096 – Wire I2C needs headroom */
         NULL,           /* parameter of the task */
         2,              /* priority of the task */
         NULL            /* Task handle */
     );
-
-    BaseType_t dispResult = xTaskCreate(
-        tCodeDisplay,   /* Task function. */
-        "TaskDisp",     /* name of task. */
-        40000,          /* Stack size of task */
-        NULL,           /* parameter of the task */
-        1,              /* priority of the task */
-        &task_Display   /* Task handle to keep track of created task */
-    );
-    if (dispResult != pdPASS) Serial.println("ERROR: xTaskCreate Display FEHLGESCHLAGEN!");
 }
 
 /**************************** */
@@ -1108,11 +1285,15 @@ void tCodeDisplay(void *pvParameters)
             vTaskDelay(pdMS_TO_TICKS(100));
     }
 
+    // Load SD background image now that NVS settings have been applied by WebServer task
+    loadBgImage();
+
     // Direkt in den Hauptloop – kein Delay, kein System-Overlay nach Animation
 
     // Anzeigestate und Dirty-Flags
     bool showWeather = false;
     unsigned long lastInfoSwitch = millis();
+    unsigned long bgRetryMs = 0;  // Zeitstempel letzter loadBgImage()-Versuch
 
     // "Zuletzt gezeichnet"-Werte zum Dirty-Check
     uint8_t  drawn_hour = 0xFF, drawn_min = 0xFF;
@@ -1174,5 +1355,16 @@ void tCodeDisplay(void *pvParameters)
         }
 
         vTaskDelay(pdMS_TO_TICKS(200));
+
+        // Hintergrundbild nachladen falls beim Startup fehlgeschlagen
+        if (systemConfig.backgroundEnabled && systemConfig.sdCardDetected
+            && bgImageW == 0 && systemConfig.bgImagePath[0] != '\0') {
+            unsigned long now = millis();
+            if (bgRetryMs == 0 || (now - bgRetryMs) >= 30000UL) {
+                bgRetryMs = now;
+                Serial.println("[BGIMG] Retry...");
+                loadBgImage();
+            }
+        }
     }
 }

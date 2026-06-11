@@ -11,4 +11,12 @@ void tCodeServerTask(void *pvParameters);
 }
 #endif
 
+#ifdef __cplusplus
+// SD-Bus Hilfsfunktionen – für main.cpp (loadBgImage) und WebServer-Task
+// sdAcquireBus(): Mutex nehmen, SPI.end(), SD_BUF_OE=LOW, SD reinit. Gibt false zurück bei Fehler.
+// sdReleaseBus(): SD_BUF_OE=HIGH, SPI.begin(), Mutex freigeben.
+bool sdAcquireBus();
+void sdReleaseBus();
+#endif
+
 #endif

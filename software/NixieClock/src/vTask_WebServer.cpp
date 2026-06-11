@@ -24,15 +24,9 @@ extern volatile bool bootInitDone;
 extern void scanSdCache(const char* dirPath);   // defined in main.cpp
 extern weatherDataStruct weatherData;
 
-char XML[4096];
-char buf[64];
+char XML[1024];
 Preferences prefs;
 
-IPAddress Actual_IP;
-IPAddress PageIP(192, 168, 178, 137);
-IPAddress gateway(192, 168, 178, 1);
-IPAddress subnet(255, 255, 255, 0);
-IPAddress ip;
 WebServer server(80);
 
 void UpdateSlider();
@@ -63,8 +57,10 @@ void tCodeServerTask(void *pvParameters)
     auto connectWiFi = [&]() {
         Serial.print("Connecting to: ");
         Serial.println(AP_SSID);
-        WiFi.config(ip, gateway, subnet);
-        WiFi.setHostname("NixieClock"); // sets DHCP hostname
+        WiFi.mode(WIFI_STA);
+        WiFi.disconnect(false);   // reset stack state from previous boot
+        vTaskDelay(pdMS_TO_TICKS(100));
+        WiFi.setHostname("NixieClock");
         WiFi.begin(AP_SSID, AP_PASS);
 
         uint32_t startMs = millis();
@@ -120,22 +116,34 @@ void tCodeServerTask(void *pvParameters)
     if (prefs.isKey("cl_bg_r"))  systemConfig.clockBgR           = prefs.getUChar("cl_bg_r");
     if (prefs.isKey("cl_bg_g"))  systemConfig.clockBgG           = prefs.getUChar("cl_bg_g");
     if (prefs.isKey("cl_bg_b"))  systemConfig.clockBgB           = prefs.getUChar("cl_bg_b");
+    if (prefs.isKey("bg_img")) { String _bg = prefs.getString("bg_img"); strncpy(systemConfig.bgImagePath, _bg.c_str(), 127); systemConfig.bgImagePath[127] = '\0'; }
+    if (prefs.isKey("bg_td"))    systemConfig.bgTextDark          = prefs.getUChar("bg_td") != 0;
     prefs.end();
     Serial.println("--> Prefs loaded");
 
-    // Apply persisted brightness to PCA9685 immediately after prefs are loaded
+    // Apply persisted brightness to PCA9685 before WiFi starts.
+    // The small I2C delay here also lets the ESP32 WiFi stack settle before WiFi.begin().
     Serial.printf("[DISPLAY] restoring brightness from NVS: %u\n", systemConfig.displayBrightness);
     pca9685_setAllChannels(systemConfig.displayBrightness);
 
     // Push persisted RGB config into the queue so the RGB task starts with correct values
     xQueueSend(xQueue_RGB_Config, &rgbConfig, pdMS_TO_TICKS(200));
 
+    // WiFi-Stack braucht nach Power-On (RF-Hardware kalt) oder Reset
+    // (Stack-State im RAM) eine kurze Pause vor WiFi.begin().
+    if (esp_reset_reason() == ESP_RST_POWERON) {
+        Serial.println("[WiFi] Power-on: warte 2s fuer RF-Hardware...");
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    } else {
+        Serial.println("[WiFi] Reset: warte 500ms fuer Stack-Cleanup...");
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+
     connectWiFi();
 
     // Apply NTP config after WiFi is connected (needs DNS)
     applyNTPConfig();
     Serial.println("--> NTP configured");
-    bootInitDone = true;  // Animation kann jetzt enden
 
     server.on("/", SendWebsite);
     server.on("/xml", SendXML);
@@ -151,64 +159,68 @@ void tCodeServerTask(void *pvParameters)
     server.on("/SD_UPLOAD", HTTP_POST, HandleSdUpload, HandleSdUploadFile);
     server.on("/SET_ANIM", HandleSetAnim);
     server.on("/SET_WEATHER", HandleSetWeather);
+    server.on("/favicon.ico", []() { server.send(204, "text/plain", ""); });
     server.begin();
+
+    bootInitDone = true;  // Ab hier: Display zeigt Zeit UND WebServer ist bereit
+    Serial.printf("\n*** WEBSERVER READY  v%s  http://%s/ ***\n\n",
+                  FW_VERSION, WiFi.localIP().toString().c_str());
     Serial.print("--> Init WebServer OK: "); Serial.println(millis());
 
-    bool pendingSettingsSave = true;  // write settings.json on the first loop iteration
+    bool pendingSettingsSave = true;
+    uint32_t pendingSaveAfterMs = millis() + 8000; // 8s warten bevor erster SD-Write
+    uint32_t wifiLostMs = 0;
 
     for (;;)
     {
         if (WiFi.status() != WL_CONNECTED)
         {
-            systemConfig.wifiConnected = false;
-            Serial.println("WiFi Verbindung verloren - reconnect...");
-            WiFi.disconnect();
-            vTaskDelay(pdMS_TO_TICKS(1000));
-            connectWiFi();
+            // Debounce: erst nach 5 s echtem Verbindungsverlust reconnecten.
+            // WiFi.status() kann nach TCP-Verbindungsende kurz WL_IDLE_STATUS melden,
+            // obwohl das WLAN noch verbunden ist.
+            if (wifiLostMs == 0) {
+                wifiLostMs = millis();
+            } else if (millis() - wifiLostMs >= 5000) {
+                systemConfig.wifiConnected = false;
+                Serial.println("WiFi Verbindung verloren - reconnect...");
+                WiFi.reconnect();  // non-blocking: handleClient() bleibt aktiv
+                wifiLostMs = millis() + 10000;  // 10s warten bevor naechster Versuch
+            }
+        } else {
+            wifiLostMs = 0;  // Verbindung OK, Debounce-Timer zurücksetzen
         }
 
         server.handleClient();
 
         // Deferred first-boot settings write: runs after the display task has had
         // time to release the SPI bus (typically within the first few loop ticks).
-        if (pendingSettingsSave && systemConfig.sdCardDetected) {
+        if (pendingSettingsSave && systemConfig.sdCardDetected && millis() > pendingSaveAfterMs) {
             if (saveConfigToSD()) pendingSettingsSave = false;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1));  // 1ms: handleClient muss schnell reagieren koennen
     }
 }
 
-int brightness = 0;
-bool LED0 = false, SomeOutput = false;
-
 void UpdateSlider()
 {
-    String t_state = server.arg("VALUE");
-    brightness = t_state.toInt();
-    
-    // Map brightness to LED brightness
-    int ledBrightness = map(brightness, 0, 255, 0, 255);
-    
-    rgbConfig.rgbBrigthness = ledBrightness;
-
-    // Respond with the updated RPM value
+    int brightness = server.arg("VALUE").toInt();
+    rgbConfig.rgbBrigthness = (uint8_t)brightness;
     server.send(200, "text/plain", String(brightness));
-    xQueueSend(xQueue_RGB_Config, &rgbConfig, 10);  // Send queue
+    xQueueSend(xQueue_RGB_Config, &rgbConfig, 10);
 }
 
 void ProcessButton_0()
 {
-    LED0 = !LED0;
-    //digitalWrite(PIN_LED, LED0);
-    rgbConfig.rgbSwitch = LED0;
+    static bool led = false;
+    led = !led;
+    rgbConfig.rgbSwitch = led;
     server.send(200, "text/plain", "");
-    xQueueSend(xQueue_RGB_Config, &rgbConfig, 10);  // Send queue
+    xQueueSend(xQueue_RGB_Config, &rgbConfig, 10);
 }
 
 void SendWebsite()
 {
-    server.setContentLength(strlen_P(PAGE_MAIN));
     server.send_P(200, PSTR("text/html"), PAGE_MAIN);
 }
 
@@ -261,6 +273,8 @@ void SendXML()
         "<WCITY>%s</WCITY>"
         "<WLAT>%.4f</WLAT>"
         "<WLON>%.4f</WLON>"
+        "<BGIMG>%s</BGIMG>"
+        "<BGTD>%u</BGTD>"
         "</Data>",
         (unsigned)ESP.getFreeHeap(),
         WiFi.RSSI(),
@@ -287,7 +301,9 @@ void SendXML()
         (unsigned)systemConfig.weatherEnabled,
         systemConfig.weatherCity,
         systemConfig.weatherLat,
-        systemConfig.weatherLon
+        systemConfig.weatherLon,
+        systemConfig.bgImagePath,
+        (unsigned)systemConfig.bgTextDark
     );
     server.send(200, "text/xml", XML);
 }
@@ -364,7 +380,9 @@ void HandleSetDisplay()
     if (server.hasArg("CFB")) systemConfig.clockFgB = (uint8_t)server.arg("CFB").toInt();
     if (server.hasArg("CBR")) systemConfig.clockBgR = (uint8_t)server.arg("CBR").toInt();
     if (server.hasArg("CBG")) systemConfig.clockBgG = (uint8_t)server.arg("CBG").toInt();
-    if (server.hasArg("CBB")) systemConfig.clockBgB = (uint8_t)server.arg("CBB").toInt();
+    if (server.hasArg("CBB"))    systemConfig.clockBgB  = (uint8_t)server.arg("CBB").toInt();
+    if (server.hasArg("BG_IMG")) { String _bg = server.arg("BG_IMG"); strncpy(systemConfig.bgImagePath, _bg.c_str(), 127); systemConfig.bgImagePath[127] = '\0'; }
+    if (server.hasArg("BG_TD"))  systemConfig.bgTextDark = server.arg("BG_TD").toInt() != 0;
 
     // Apply brightness to hardware immediately
     if (server.hasArg("BRIGHT")) {
@@ -383,7 +401,10 @@ void HandleSetDisplay()
     prefs.putUChar("cl_bg_r",   systemConfig.clockBgR);
     prefs.putUChar("cl_bg_g",   systemConfig.clockBgG);
     prefs.putUChar("cl_bg_b",   systemConfig.clockBgB);
+    prefs.putString("bg_img",   systemConfig.bgImagePath);
+    prefs.putUChar("bg_td",     systemConfig.bgTextDark ? 1 : 0);
     prefs.end();
+    loadBgImage();
     saveConfigToSD();
     server.send(200, "text/plain", "OK");
 }
@@ -457,105 +478,68 @@ void HandleSdFile()
 
     String path = server.arg("path");
 
-    String ct = "application/octet-stream";
+    const char* ct = "application/octet-stream";
     String lp = path; lp.toLowerCase();
     if      (lp.endsWith(".jpg") || lp.endsWith(".jpeg")) ct = "image/jpeg";
     else if (lp.endsWith(".png"))  ct = "image/png";
     else if (lp.endsWith(".bmp"))  ct = "image/bmp";
     else if (lp.endsWith(".gif"))  ct = "image/gif";
-    else if (lp.endsWith(".txt"))  ct = "text/plain";
+    else if (lp.endsWith(".txt") || lp.endsWith(".json") ||
+             lp.endsWith(".cfg") || lp.endsWith(".log")  ||
+             lp.endsWith(".csv") || lp.endsWith(".ini"))  ct = "text/plain";
 
-    // sdCard was initialized before display-init and kept valid via SHARED_SPI.
-    // Protect with mutex so display task doesn't use SPI concurrently.
-    if (xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY) != pdTRUE) {
-        server.send(503, "text/plain", "Busy");
+    if (!sdAcquireBus()) {
+        server.send(503, "text/plain", "SD busy");
         return;
     }
 
-    // Deselect ALL display CS pins explicitly before SD access
-    digitalWrite(TFT_CS_0, HIGH);
-    digitalWrite(TFT_CS_1, HIGH);
-    digitalWrite(TFT_CS_2, HIGH);
-    digitalWrite(TFT_CS_3, HIGH);
-    digitalWrite(TFT_CS_4, HIGH);
-
-    // SPI-Peripherie freigeben damit SoftSpiDriver GPIO-Zugriff hat
-    SPI.end();
-
-    // Buffer aktivieren fuer SD-Zugriff
-    digitalWrite(SD_BUF_OE, LOW);
-    delayMicroseconds(1);
-
     FsFile f = sdCard.open(path.c_str(), O_RDONLY);
-
-    // If open fails, aggressive reinit: full SPI reset + slow clock + long delays
-    if (!f) {
-        Serial.println("[SD_FILE] open failed, aggressive reinit...");
-
-        // 1) Kill SdFat state completely
-        sdCard.end();
-
-        // 2) Set pins as GPIO
-        pinMode(TFT_CLK, OUTPUT);
-        pinMode(TFT_MOSI, OUTPUT);
-        pinMode(TFT_MISO, INPUT_PULLUP);
-        pinMode(SD_CS, OUTPUT);
-        digitalWrite(SD_CS, HIGH);
-        digitalWrite(TFT_CLK, LOW);
-        digitalWrite(TFT_MOSI, HIGH);
-        delay(100);
-
-        // 3) Re-init SD card via SoftSpi
-        if (sdCard.begin(SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(0), &softSpi))) {
-            f = sdCard.open(path.c_str(), O_RDONLY);
-            Serial.printf("[SD_FILE] retry open=%d\n", (int)(bool)f);
-        } else {
-            Serial.printf("[SD_FILE] reinit failed err=0x%02X data=0x%02X\n",
-                          (int)sdCard.sdErrorCode(), (int)sdCard.sdErrorData());
-        }
-    }
-
     if (!f || f.isDirectory()) {
         if (f) f.close();
-        digitalWrite(SD_BUF_OE, HIGH);  // Buffer aus
-        SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);  // SPI restore
-        xSemaphoreGiveRecursive(xSpiMutex);
+        sdReleaseBus();
         server.send(404, "text/plain", "Not found");
         return;
     }
 
     uint32_t fileSize = (uint32_t)f.fileSize();
-
-    // Chunk-Buffer: klein genug um immer in Heap zu passen
-    const size_t CHUNK = 2048;
-    uint8_t* buf = (uint8_t*)malloc(CHUNK);
-    if (!buf) {
-        f.close();
-        digitalWrite(SD_BUF_OE, HIGH);
-        SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);
-        xSemaphoreGiveRecursive(xSpiMutex);
-        server.send(503, "text/plain", "Out of memory");
-        return;
-    }
-
-    server.sendHeader("Cache-Control", "max-age=60");
-    server.setContentLength(fileSize);
-    server.send(200, ct, "");
+    Serial.printf("[SD_FILE] %s %u bytes\n", path.c_str(), fileSize);
 
     WiFiClient client = server.client();
+    if (!client) { f.close(); sdReleaseBus(); return; }
+
+    // Raw HTTP-Header senden
+    String hdr = "HTTP/1.1 200 OK\r\nContent-Type: ";
+    hdr += ct;
+    hdr += "\r\nContent-Length: ";
+    hdr += String(fileSize);
+    hdr += "\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n";
+    client.write((const uint8_t*)hdr.c_str(), hdr.length());
+
+    // Chunk-Puffer im BSS (2 KB) – kein Heap-malloc noetig.
+    // Aeusserer Loop: connected()-Check nach jedem Chunk (Exit bei echter Trennung,
+    // verhindert Endlosschleife). Innerer Loop: kein connected()-Check, nur Timeout
+    // (TCP-Buffer voll != getrennt).
+    static uint8_t sdChunk[2048];
     uint32_t remaining = fileSize;
     while (remaining > 0 && client.connected()) {
-        size_t toRead = (remaining < CHUNK) ? (size_t)remaining : CHUNK;
-        int rd = f.read(buf, toRead);
+        size_t toRead = remaining < sizeof(sdChunk) ? (size_t)remaining : sizeof(sdChunk);
+        int rd = f.read(sdChunk, toRead);
         if (rd <= 0) break;
-        client.write(buf, rd);
-        remaining -= rd;
+        size_t written = 0;
+        uint32_t t0 = millis();
+        while (written < (size_t)rd) {
+            int w = client.write(sdChunk + written, (size_t)rd - written);
+            if (w > 0) { written += (size_t)w; t0 = millis(); }
+            else { vTaskDelay(pdMS_TO_TICKS(20)); }
+            if (millis() - t0 > 10000) break;
+        }
+        remaining -= (size_t)rd;
     }
-    free(buf);
+
     f.close();
-    digitalWrite(SD_BUF_OE, HIGH);  // Buffer aus - SD geschuetzt
-    SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);  // SPI wieder fuer Displays
-    xSemaphoreGiveRecursive(xSpiMutex);
+    sdReleaseBus();
+    client.stop();
+    Serial.printf("[SD_FILE] done remaining=%u\n", remaining);
 }
 
 void HandleSetAnim()
@@ -572,46 +556,54 @@ void HandleSetAnim()
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SD helper: acquire / release SPI bus for SD access
+//
+// sdAcquireBus() immer mit vollständigem SD-Reinit:
+// Nach jedem SPI.begin() (für Displays) verliert die SD-Karte ihren internen
+// SPI-Zustand. Daher wird die SD-Karte bei jedem Bus-Acquire neu initialisiert.
+// Das kostet ~150 ms, ist aber bei allen vorhandenen Zugriffsstellen akzeptabel
+// und vermeidet zuverlässig alle "open failed"-Fehler.
 // ═══════════════════════════════════════════════════════════════════════════
 
-static bool sdAcquireBus()
+bool sdAcquireBus()
 {
-    // Use a generous timeout: display task holds SPI for up to ~100ms per frame
+    // Warten bis Display-Task SPI freigibt (max 8 s)
     if (xSemaphoreTakeRecursive(xSpiMutex, pdMS_TO_TICKS(8000)) != pdTRUE) return false;
+
+    // Alle Display-CS deselektieren
     digitalWrite(TFT_CS_0, HIGH);
     digitalWrite(TFT_CS_1, HIGH);
     digitalWrite(TFT_CS_2, HIGH);
     digitalWrite(TFT_CS_3, HIGH);
     digitalWrite(TFT_CS_4, HIGH);
+
+    // Hardware-SPI freigeben, SD-Buffer aktivieren
     SPI.end();
     digitalWrite(SD_BUF_OE, LOW);
-    delayMicroseconds(2);
-    return true;
-}
 
-static void sdReleaseBus()
-{
-    digitalWrite(SD_BUF_OE, HIGH);
-    SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);
-    xSemaphoreGiveRecursive(xSpiMutex);
-}
-
-// Re-initialize the SD card after it loses state due to SPI bus switches.
-// Must be called while the bus is already acquired (SD_BUF_OE LOW, mutex held).
-static bool sdReinit()
-{
-    Serial.println("[SD] reinit...");
+    // SD-Karte neu initialisieren – immer, da SPI.begin() die Pins zwischendurch
+    // in undefinierte Zustände bringt und die SD-Karte ihren SPI-Zustand verliert.
     sdCard.end();
-    // Manual pin reset so SoftSpiDriver can take over cleanly
     pinMode(TFT_CLK,  OUTPUT);       digitalWrite(TFT_CLK,  LOW);
     pinMode(TFT_MOSI, OUTPUT);       digitalWrite(TFT_MOSI, HIGH);
     pinMode(TFT_MISO, INPUT_PULLUP);
     pinMode(SD_CS,    OUTPUT);       digitalWrite(SD_CS,    HIGH);
     delay(100);
     bool ok = sdCard.begin(SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(0), &softSpi));
-    Serial.printf("[SD] reinit %s (err=0x%02X)\n", ok ? "OK" : "FAIL",
-                  ok ? 0 : (int)sdCard.sdErrorCode());
-    return ok;
+    if (!ok) {
+        Serial.printf("[SD] sdAcquireBus reinit FAIL (err=0x%02X)\n", (int)sdCard.sdErrorCode());
+        digitalWrite(SD_BUF_OE, HIGH);
+        SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);
+        xSemaphoreGiveRecursive(xSpiMutex);
+        return false;
+    }
+    return true;
+}
+
+void sdReleaseBus()
+{
+    digitalWrite(SD_BUF_OE, HIGH);
+    SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, 2);
+    xSemaphoreGiveRecursive(xSpiMutex);
 }
 
 // ─── SD_RESCAN: rebuild the RAM file cache from the actual SD card ────────────
@@ -627,8 +619,6 @@ void HandleSdRescan()
         server.send(503, "text/plain", "Busy");
         return;
     }
-    // Reinit first so a stale SD state doesn't yield an empty scan
-    sdReinit();
     sdFileCacheCount = 0;
     scanSdCache("/");
     int found = sdFileCacheCount;
@@ -651,18 +641,9 @@ bool saveConfigToSD()
     }
 
     // Delete any existing file first.
-    // SdFat2: O_CREAT|O_TRUNC on a non-existent file can fail with O_WRONLY
-    // on some SD cards/firmware versions. Remove + O_RDWR|O_CREAT is bulletproof.
     sdCard.remove("/settings.json");
 
     FsFile f = sdCard.open("/settings.json", O_RDWR | O_CREAT);
-    if (!f) {
-        Serial.println("[CFG] open failed – reinit SD and retry");
-        if (sdReinit()) {
-            sdCard.remove("/settings.json");
-            f = sdCard.open("/settings.json", O_RDWR | O_CREAT);
-        }
-    }
     if (!f) {
         Serial.println("[CFG] saveConfigToSD: cannot open file");
         sdReleaseBus();
@@ -670,7 +651,7 @@ bool saveConfigToSD()
     }
 
     // Build JSON – ArduinoJson v6
-    StaticJsonDocument<1024> doc;
+    StaticJsonDocument<1200> doc;
 
     JsonObject sys = doc.createNestedObject("system");
     sys["ntp"]       = systemConfig.ntpServer;
@@ -693,6 +674,8 @@ bool saveConfigToSD()
     clBg.add(systemConfig.clockBgR);
     clBg.add(systemConfig.clockBgG);
     clBg.add(systemConfig.clockBgB);
+    sys["bg_img"]    = systemConfig.bgImagePath;
+    sys["bg_td"]     = systemConfig.bgTextDark;
 
     JsonObject rgb = doc.createNestedObject("rgb");
     rgb["mode"] = rgbConfig.rgbMode;
@@ -702,7 +685,7 @@ bool saveConfigToSD()
     rgb["br"]   = rgbConfig.rgbBrigthness;
 
     // Write via a small char buffer to stay heap-friendly
-    char jsonBuf[1100];
+    char jsonBuf[1400];
     size_t len = serializeJsonPretty(doc, jsonBuf, sizeof(jsonBuf));
     f.write((const uint8_t*)jsonBuf, len);
     f.close();
@@ -746,6 +729,10 @@ void HandleSdDelete()
         return;
     }
     String path = server.arg("path");
+    if (path.length() == 0) {
+        server.send(400, "text/plain", "Empty path");
+        return;
+    }
 
     if (!sdAcquireBus()) {
         server.send(503, "text/plain", "Busy");
@@ -753,15 +740,6 @@ void HandleSdDelete()
     }
 
     bool ok = sdCard.remove(path.c_str());
-
-    // If remove failed the SD is likely in an error state after a bus switch.
-    // Reinit and try once more.
-    if (!ok) {
-        Serial.println("[SD_DELETE] remove failed – reinit SD and retry");
-        if (sdReinit()) {
-            ok = sdCard.remove(path.c_str());
-        }
-    }
 
     if (ok) {
         // Remove from RAM cache
@@ -773,6 +751,13 @@ void HandleSdDelete()
                 sdFileCacheCount--;
                 break;
             }
+        }
+
+        // War das aktive Hintergrundbild? Dann Dimensionen zurücksetzen
+        // (bgImageData bleibt alloziert, aber Display-Task prüft bgImageW > 0)
+        if (strcmp(systemConfig.bgImagePath, path.c_str()) == 0) {
+            bgImageW = 0;
+            bgImageH = 0;
         }
     }
 
@@ -794,18 +779,7 @@ static uint32_t s_uploadWritten = 0;   // bytes successfully written so far
 
 void HandleSdUpload()
 {
-    if (s_uploadOk) {
-        // Update file size in cache entry that HandleSdUploadFile already added
-        for (int i = 0; i < sdFileCacheCount; i++) {
-            if (strcmp(sdFileCache[i].path, s_uploadPath.c_str()) == 0) {
-                // size was added at UPLOAD_FILE_END, nothing more to do
-                break;
-            }
-        }
-        server.send(200, "text/plain", "OK");
-    } else {
-        server.send(500, "text/plain", "Upload failed");
-    }
+    server.send(s_uploadOk ? 200 : 500, "text/plain", s_uploadOk ? "OK" : "Upload failed");
     s_uploadOk    = false;
     s_busAcquired = false;
 }
@@ -833,13 +807,7 @@ void HandleSdUploadFile()
         sdCard.remove(s_uploadPath.c_str());
         s_uploadFile = sdCard.open(s_uploadPath.c_str(), O_RDWR | O_CREAT);
         if (!s_uploadFile) {
-            Serial.println("[SD_UPLOAD] open failed – reinit SD and retry");
-            if (sdReinit()) {
-                sdCard.remove(s_uploadPath.c_str());
-                s_uploadFile = sdCard.open(s_uploadPath.c_str(), O_RDWR | O_CREAT);
-            }
-        }
-        if (!s_uploadFile) {
+
             Serial.println("[SD_UPLOAD] open failed");
             sdReleaseBus();
             s_busAcquired = false;

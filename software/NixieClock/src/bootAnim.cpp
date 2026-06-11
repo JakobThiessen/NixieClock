@@ -167,7 +167,10 @@ static void animMatrix(uint32_t durationMs)
         }
         dispCS(0, HIGH);
 
+        // Mutex freigeben während vTaskDelay damit andere Tasks (SD/WebServer) SPI nutzen können
+        xSemaphoreGiveRecursive(xSpiMutex);
         vTaskDelay(pdMS_TO_TICKS(60));
+        xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
     }
 
     // Aufräumen
@@ -249,7 +252,10 @@ static void animSlot(uint32_t durationMs)
             dispCS(0, HIGH);
         }
 
+        // Mutex freigeben während vTaskDelay damit andere Tasks (SD/WebServer) SPI nutzen können
+        xSemaphoreGiveRecursive(xSpiMutex);
         vTaskDelay(pdMS_TO_TICKS(20));
+        xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
     }
 
     // Aufräumen
@@ -299,7 +305,10 @@ static void animColorWave(uint32_t durationMs)
         dispCS(0, HIGH);
 
         baseHue += 6;
+        // Mutex freigeben während vTaskDelay damit andere Tasks (SD/WebServer) SPI nutzen können
+        xSemaphoreGiveRecursive(xSpiMutex);
         vTaskDelay(pdMS_TO_TICKS(80));
+        xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
     }
 
     // Fade-Out
@@ -330,7 +339,10 @@ static void animColorWave(uint32_t durationMs)
         }
         dispCS(0, HIGH);
         baseHue += 3;
+        // Mutex freigeben während Fade-Out-Pause damit WebServer SD nutzen kann
+        xSemaphoreGiveRecursive(xSpiMutex);
         vTaskDelay(pdMS_TO_TICKS(60));
+        xSemaphoreTakeRecursive(xSpiMutex, portMAX_DELAY);
     }
 
     for (int d = 0; d < 4; d++) {
